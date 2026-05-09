@@ -38,7 +38,7 @@ export default function RandomTarotReading({
     let active = true
 
     async function loadTarot() {
-      const randomCardNumber = Math.floor(Math.random() * fullTarotCards.length)
+      const randomCardNumber = getDailyCardNumber()
 
       if (supabase) {
         const { data } = await supabase
@@ -113,6 +113,40 @@ export default function RandomTarotReading({
       </section>
     </>
   )
+}
+
+function getDailyCardNumber() {
+  const today = localDateKey()
+  const storageKey = 'k-mystic-daily-tarot'
+
+  try {
+    const stored = window.localStorage.getItem(storageKey)
+    if (stored) {
+      const parsed = JSON.parse(stored) as { date?: string; cardNumber?: number }
+      if (
+        parsed.date === today &&
+        typeof parsed.cardNumber === 'number' &&
+        parsed.cardNumber >= 0 &&
+        parsed.cardNumber < fullTarotCards.length
+      ) {
+        return parsed.cardNumber
+      }
+    }
+  } catch {
+    window.localStorage.removeItem(storageKey)
+  }
+
+  const cardNumber = Math.floor(Math.random() * fullTarotCards.length)
+  window.localStorage.setItem(storageKey, JSON.stringify({ date: today, cardNumber }))
+  return cardNumber
+}
+
+function localDateKey() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function fallbackTarot(lang: LanguageCode, cardNumber: number): Fortune {

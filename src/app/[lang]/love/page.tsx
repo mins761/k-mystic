@@ -1,10 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { languages, tarotCards, zodiacSigns } from '@/lib/i18n'
-import { tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
+import { languages, zodiacSigns } from '@/lib/i18n'
+import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 import type { LanguageCode } from '@/types'
 
 type LoveReading = {
@@ -173,11 +173,12 @@ const loveCopy: Record<
 export default function LovePage({ params }: { params: { lang: LanguageCode } }) {
   const copy = loveCopy[params.lang]
   const [cards, setCards] = useState(() => drawLoveCards())
-  const [revealed, setRevealed] = useState(0)
+  const [revealedCards, setRevealedCards] = useState([false, false, false])
   const [reading, setReading] = useState<LoveReading | null>(null)
   const [loading, setLoading] = useState(false)
   const [zodiacResult, setZodiacResult] = useState<CompatibilityResult | null>(null)
   const [sajuResult, setSajuResult] = useState<CompatibilityResult | null>(null)
+  const allCardsRevealed = revealedCards.every(Boolean)
 
   const hearts = useMemo(
     () =>
@@ -189,13 +190,15 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
     [],
   )
 
-  async function revealReading() {
+  useEffect(() => {
+    if (!allCardsRevealed || reading || loading) return
+    void loadLoveReading()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCardsRevealed])
+
+  async function loadLoveReading() {
     setLoading(true)
     setReading(null)
-    setRevealed(0)
-    cards.forEach((_, index) => {
-      window.setTimeout(() => setRevealed(index + 1), index * 500)
-    })
 
     const response = await fetch('/api/love-tarot', {
       method: 'POST',
@@ -213,13 +216,30 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
     window.setTimeout(() => {
       setReading(data as LoveReading)
       setLoading(false)
-    }, 1700)
+    }, 500)
+  }
+
+  function revealReading() {
+    if (loading) return
+    setReading(null)
+    cards.forEach((_, index) => {
+      window.setTimeout(() => {
+        setRevealedCards((current) => current.map((value, itemIndex) => (itemIndex === index ? true : value)))
+      }, index * 500)
+    })
+  }
+
+  function revealCard(index: number) {
+    if (loading || revealedCards[index]) return
+    setReading(null)
+    setRevealedCards((current) => current.map((value, itemIndex) => (itemIndex === index ? true : value)))
   }
 
   function tryAgain() {
     setCards(drawLoveCards())
-    setRevealed(0)
+    setRevealedCards([false, false, false])
     setReading(null)
+    setLoading(false)
   }
 
   async function checkZodiac(event: FormEvent<HTMLFormElement>) {
@@ -286,7 +306,14 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
       <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-7 md:grid-cols-3">
           {cards.map((card, index) => (
-            <LoveCard key={`${card.number}-${index}`} card={card} position={copy.positions[index]} revealed={revealed > index} />
+            <LoveCard
+              key={`${card.number}-${index}`}
+              card={card}
+              position={copy.positions[index]}
+              revealed={revealedCards[index]}
+              disabled={loading}
+              onReveal={() => revealCard(index)}
+            />
           ))}
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -547,25 +574,36 @@ function LoveReadingLoader({ label, cards }: { label: string; cards: string[] })
 }
 
 function drawLoveCards() {
-  return [...tarotCards].sort(() => Math.random() - 0.5).slice(0, 3)
+  return [...fullTarotCards].sort(() => Math.random() - 0.5).slice(0, 3)
 }
 
 function LoveCard({
   card,
   position,
   revealed,
+  disabled,
+  onReveal,
 }: {
-  card: (typeof tarotCards)[number]
+  card: (typeof fullTarotCards)[number]
   position: string
   revealed: boolean
+  disabled: boolean
+  onReveal: () => void
 }) {
   return (
     <div className="text-center">
-      <div className="mx-auto h-[300px] w-[180px] [perspective:1000px]">
+      <button
+        type="button"
+        onClick={onReveal}
+        disabled={disabled || revealed}
+        aria-pressed={revealed}
+        aria-label={`Reveal ${position}: ${card.name}`}
+        className="mx-auto block h-[300px] w-[180px] cursor-pointer bg-transparent p-0 [perspective:1000px] disabled:cursor-default"
+      >
         <div
           className={`relative h-full w-full transition duration-700 [transform-style:preserve-3d] ${
             revealed ? '[transform:rotateY(180deg)]' : ''
-          }`}
+          } ${disabled ? 'opacity-80' : 'hover:-translate-y-2 hover:drop-shadow-[0_0_22px_rgba(244,114,182,0.5)]'}`}
         >
           <div className="absolute inset-0 overflow-hidden rounded-xl border-2 border-pink-200/70 bg-mystic-dark shadow-[0_0_32px_rgba(236,72,153,0.32)] [backface-visibility:hidden]">
             <Image src={tarotBacks.classic} alt="" fill sizes="180px" className="object-cover" draggable={false} />
@@ -581,8 +619,9 @@ function LoveCard({
             />
           </div>
         </div>
-      </div>
+      </button>
       <p className="mt-5 font-display text-2xl text-white">{position}</p>
+      <p className="mt-2 text-sm text-pink-100/55">{revealed ? card.name : 'Tap to reveal'}</p>
     </div>
   )
 }
