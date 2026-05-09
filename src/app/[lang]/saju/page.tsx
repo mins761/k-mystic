@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import ElementChart from '@/components/ElementChart'
 import SajuTable from '@/components/SajuTable'
@@ -179,9 +179,19 @@ const sajuCopy: Record<
 
 export default function SajuPage({ params }: { params: { lang: LanguageCode } }) {
   const copy = sajuCopy[params.lang]
+  const [birthDate, setBirthDate] = useState({ year: '', month: '', day: '' })
   const [result, setResult] = useState<SajuResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    setBirthDate({
+      year: searchParams.get('year') || '',
+      month: searchParams.get('month') || '',
+      day: searchParams.get('day') || '',
+    })
+  }, [])
 
   async function submitReading(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -247,13 +257,43 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
                 </select>
               </Field>
               <Field label={copy.birthYear}>
-                <input name="year" type="number" min="1900" max="2100" required placeholder="1994" className="input" />
+                <input
+                  name="year"
+                  type="number"
+                  min="1900"
+                  max="2100"
+                  required
+                  placeholder="1994"
+                  className="input"
+                  value={birthDate.year}
+                  onChange={(event) => setBirthDate((current) => ({ ...current, year: event.target.value }))}
+                />
               </Field>
               <Field label={copy.birthMonth}>
-                <input name="month" type="number" min="1" max="12" required placeholder="7" className="input" />
+                <input
+                  name="month"
+                  type="number"
+                  min="1"
+                  max="12"
+                  required
+                  placeholder="7"
+                  className="input"
+                  value={birthDate.month}
+                  onChange={(event) => setBirthDate((current) => ({ ...current, month: event.target.value }))}
+                />
               </Field>
               <Field label={copy.birthDay}>
-                <input name="day" type="number" min="1" max="31" required placeholder="21" className="input" />
+                <input
+                  name="day"
+                  type="number"
+                  min="1"
+                  max="31"
+                  required
+                  placeholder="21"
+                  className="input"
+                  value={birthDate.day}
+                  onChange={(event) => setBirthDate((current) => ({ ...current, day: event.target.value }))}
+                />
               </Field>
               <Field label={copy.birthHour}>
                 <select name="hour" className="input" defaultValue="">

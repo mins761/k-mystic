@@ -13,6 +13,8 @@ SPECIAL_OUT = OUT / "special"
 BACK_OUT = OUT / "backs"
 MANIFEST_OUT = OUT / "manifest.json"
 TARGET = (600, 1020)
+WHITE_THRESHOLD = 232
+WHITE_EDGE_RATIO = 0.18
 
 
 SHEETS: dict[str, list[str | None]] = {
@@ -140,6 +142,67 @@ def fit_card(crop: Image.Image) -> Image.Image:
     return ImageOps.fit(crop, TARGET, method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
 
 
+def normalize_card(crop: Image.Image) -> Image.Image:
+    fitted = fit_card(trim_white_edges(crop))
+    trimmed = remove_lower_white_band(trim_white_edges(fitted))
+    if trimmed.size != TARGET:
+        return trimmed.resize(TARGET, Image.Resampling.LANCZOS)
+    return trimmed
+
+
+def remove_lower_white_band(image: Image.Image) -> Image.Image:
+    rgb = image.convert("RGB")
+    width, height = rgb.size
+    scan_top = max(0, height - 90)
+    for y in range(scan_top, height):
+        white = 0
+        for x in range(width):
+            r, g, b = rgb.getpixel((x, y))
+            if r >= WHITE_THRESHOLD and g >= WHITE_THRESHOLD and b >= WHITE_THRESHOLD:
+                white += 1
+        if white / width > 0.5:
+            return image.crop((0, 0, width, y))
+    return image
+
+
+def trim_white_edges(image: Image.Image) -> Image.Image:
+    rgb = image.convert("RGB")
+    width, height = rgb.size
+    left = 0
+    right = width
+    top = 0
+    bottom = height
+
+    def white_ratio_row(y: int) -> float:
+        white = 0
+        for x in range(width):
+            r, g, b = rgb.getpixel((x, y))
+            if r >= WHITE_THRESHOLD and g >= WHITE_THRESHOLD and b >= WHITE_THRESHOLD:
+                white += 1
+        return white / width
+
+    def white_ratio_col(x: int) -> float:
+        white = 0
+        for y in range(height):
+            r, g, b = rgb.getpixel((x, y))
+            if r >= WHITE_THRESHOLD and g >= WHITE_THRESHOLD and b >= WHITE_THRESHOLD:
+                white += 1
+        return white / height
+
+    while top < bottom - 1 and white_ratio_row(top) > WHITE_EDGE_RATIO:
+        top += 1
+    while bottom > top + 1 and white_ratio_row(bottom - 1) > WHITE_EDGE_RATIO:
+        bottom -= 1
+    while left < right - 1 and white_ratio_col(left) > WHITE_EDGE_RATIO:
+        left += 1
+    while right > left + 1 and white_ratio_col(right - 1) > WHITE_EDGE_RATIO:
+        right -= 1
+
+    if (left, top, right, bottom) == (0, 0, width, height):
+        return image
+    return image.crop((left, top, right, bottom))
+
+
 def split_cards() -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -153,7 +216,7 @@ def split_cards() -> None:
         for index, name in enumerate(names):
             if not name:
                 continue
-            crop = fit_card(image.crop(cell_box(image, index, sheet_name)))
+            crop = normalize_card(image.crop(cell_box(image, index, sheet_name)))
             is_special = name.startswith("special-")
             slug = name[8:] if is_special else name
             out = SPECIAL_OUT / f"{slug}.png" if is_special else CARD_OUT / f"{slug}.png"
@@ -178,7 +241,7 @@ def split_cards() -> None:
     back_path = next(path for path in SRC.glob("last-*.png"))
     back_image = Image.open(back_path).convert("RGB")
     for index, name in [(0, "gold-back"), (1, "classic-back")]:
-        crop = fit_card(back_image.crop(cell_box(back_image, index, "back")))
+        crop = normalize_card(back_image.crop(cell_box(back_image, index, "back")))
         crop.save(BACK_OUT / f"{name}.png", optimize=True)
 
     manifest["backs"] = {

@@ -3,12 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { SajuPillar, SajuResult } from '@/types'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'deepseek/deepseek-chat-v3-0324:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-]
+const DEFAULT_MODELS = ['openrouter/free']
 
 const stems = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
 const branches = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해']
@@ -82,7 +77,7 @@ async function generateReading(payload: SajuPayload, fallback: SajuResult): Prom
         'X-Title': process.env.OPENROUTER_APP_NAME ?? 'K-Mystic',
       },
       body: JSON.stringify({
-        model: MODELS[Math.floor(Math.random() * MODELS.length)],
+        model: pickOpenRouterModel(),
         messages: [
           {
             role: 'system',
@@ -411,6 +406,15 @@ function getOpenRouterKey() {
     .split(',')
     .map((key) => key.trim())
     .filter(Boolean)[0]
+}
+
+function pickOpenRouterModel() {
+  const models = (process.env.OPENROUTER_MODELS || '')
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean)
+  const list = models.length ? models : DEFAULT_MODELS
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 async function saveReading(payload: SajuPayload, result: SajuResult) {

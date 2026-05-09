@@ -22,12 +22,7 @@ LANGUAGE_NAMES = {
     "zh-TW": "Traditional Chinese",
 }
 
-FREE_MODELS = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-chat-v3-0324:free",
-    "qwen/qwen-2.5-72b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-]
+DEFAULT_MODELS = ["openrouter/free"]
 
 ZODIAC_SIGNS = [
     "aries",
@@ -87,6 +82,12 @@ def openrouter_keys() -> list[str]:
         raise RuntimeError("Missing OPENROUTER_API_KEY or OPENROUTER_API_KEYS")
     random.shuffle(keys)
     return keys
+
+
+def openrouter_models() -> list[str]:
+    raw_models = os.getenv("OPENROUTER_MODELS", "")
+    models = [model.strip() for model in raw_models.split(",") if model.strip()]
+    return models or DEFAULT_MODELS
 
 
 def supabase_client() -> Client:
@@ -183,11 +184,11 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
 
 def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
     errors: list[str] = []
-    attempts = max(3, len(keys))
+    models = openrouter_models()
+    attempts: list[tuple[str, str]] = [(model, key) for key in keys for model in models]
+    random.shuffle(attempts)
 
-    for attempt in range(attempts):
-        model = random.choice(FREE_MODELS)
-        api_key = keys[attempt % len(keys)]
+    for model, api_key in attempts:
         try:
             response = requests.post(
                 OPENROUTER_URL,
@@ -216,7 +217,10 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
             content = response.json()["choices"][0]["message"]["content"]
             return extract_json(content)
         except Exception as exc:  # noqa: BLE001 - log and rotate to the next key/model.
-            errors.append(f"{model}: {exc}")
+            detail = ""
+            if "response" in locals() and response is not None:
+                detail = f" :: {response.text[:240]}"
+            errors.append(f"{model}: {exc}{detail}")
         finally:
             time.sleep(API_SLEEP_SECONDS)
 

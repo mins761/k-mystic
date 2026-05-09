@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'deepseek/deepseek-chat-v3-0324:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-]
+const DEFAULT_MODELS = ['openrouter/free']
 
 type LoveMode = 'reading' | 'zodiac' | 'saju'
 type Lang = 'en' | 'es' | 'ja' | 'zh-TW'
@@ -53,7 +48,7 @@ async function generateJson<T extends object>(prompt: string, fallback: T): Prom
         'X-Title': process.env.OPENROUTER_APP_NAME ?? 'K-Mystic',
       },
       body: JSON.stringify({
-        model: MODELS[Math.floor(Math.random() * MODELS.length)],
+        model: pickOpenRouterModel(),
         messages: [
           { role: 'system', content: 'Return valid JSON only. Do not include markdown.' },
           { role: 'user', content: prompt },
@@ -296,4 +291,13 @@ function getOpenRouterKey() {
     .split(',')
     .map((key) => key.trim())
     .filter(Boolean)[0]
+}
+
+function pickOpenRouterModel() {
+  const models = (process.env.OPENROUTER_MODELS || '')
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean)
+  const list = models.length ? models : DEFAULT_MODELS
+  return list[Math.floor(Math.random() * list.length)]
 }
