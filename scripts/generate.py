@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 from dotenv import load_dotenv
+from postgrest.exceptions import APIError
 from supabase import Client, create_client
 
 
@@ -345,7 +346,22 @@ def fortune_exists(client: Client, fortune_type: str, lang: str, today: str, sig
 
 
 def insert_fortune(client: Client, row: dict[str, Any]) -> None:
-    client.table("fortunes").insert(row).execute()
+    try:
+        client.table("fortunes").insert(row).execute()
+    except APIError as exc:
+        message = str(exc)
+        optional_columns = {"affirmation", "mantra", "best_time"}
+        missing_optional = [column for column in optional_columns if f"'{column}' column" in message]
+        if not missing_optional:
+            raise
+
+        print(
+            "Supabase schema is missing optional fortune columns "
+            f"{', '.join(sorted(missing_optional))}; inserting without them. "
+            "Run supabase.sql to persist these fields."
+        )
+        fallback_row = {key: value for key, value in row.items() if key not in optional_columns}
+        client.table("fortunes").insert(fallback_row).execute()
 
 
 def generate_tarot(client: Client, keys: list[str], lang: str, today: str) -> None:
