@@ -134,13 +134,15 @@ export default function RandomTarotReading({
           <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {spread.map((cardNumber, index) => {
               const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
+              const isSelected = selectedCard === cardNumber
+              const isRevealed = revealedCards.includes(cardNumber) || isSelected
               return (
                 <ChoiceTarotCard
                   key={cardNumber}
                   cardNumber={cardNumber}
                   name={card.name}
-                  revealed={revealedCards.includes(cardNumber)}
-                  selected={selectedCard === cardNumber}
+                  revealed={isRevealed}
+                  selected={isSelected}
                   disabled={selectedCard !== null}
                   index={index}
                   onChoose={() => chooseCard(cardNumber)}
