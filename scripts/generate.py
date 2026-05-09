@@ -23,13 +23,21 @@ LANGUAGE_NAMES = {
     "zh-TW": "Traditional Chinese",
 }
 
-DEFAULT_MODELS = ["openrouter/free"]
+DEFAULT_MODELS = [
+    "openai/gpt-oss-20b:free",
+    "z-ai/glm-4.5-air:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "google/gemma-4-31b-it:free",
+]
 DEPRECATED_MODELS = {
     "qwen/qwen-2.5-72b-instruct:free",
     "deepseek/deepseek-chat-v3-0324:free",
     "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
+    "baidu/cobuddy-20260430:free",
+    "openrouter/free",
 }
+UNSUITABLE_MODEL_PARTS = ("baidu/", "ocr", "-vl", "omni")
 
 ZODIAC_SIGNS = [
     "aries",
@@ -98,10 +106,36 @@ def openrouter_models() -> list[str]:
     custom_models = [
         model.strip()
         for model in raw_models.split(",")
-        if model.strip() and model.strip() not in DEPRECATED_MODELS
+        if model.strip() and is_usable_model(model.strip())
     ]
-    models = DEFAULT_MODELS + [model for model in custom_models if model not in DEFAULT_MODELS]
+    live_models = fetch_live_free_models()
+    models = custom_models + [model for model in DEFAULT_MODELS if model in live_models]
+    models += [model for model in live_models if model not in models][:4]
+    if not models:
+        models = [model for model in DEFAULT_MODELS if is_usable_model(model)]
     return models
+
+
+def is_usable_model(model: str) -> bool:
+    lowered = model.lower()
+    return model not in DEPRECATED_MODELS and not any(part in lowered for part in UNSUITABLE_MODEL_PARTS)
+
+
+def fetch_live_free_models() -> list[str]:
+    try:
+        response = requests.get("https://openrouter.ai/api/v1/models", timeout=15)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as exc:  # noqa: BLE001 - static defaults are enough when model discovery is unavailable.
+        print(f"Could not fetch OpenRouter model list, using defaults: {exc}", flush=True)
+        return []
+
+    models = [
+        item.get("id", "")
+        for item in data.get("data", [])
+        if isinstance(item, dict) and str(item.get("id", "")).endswith(":free")
+    ]
+    return [model for model in models if is_usable_model(model)]
 
 
 def supabase_client() -> Client:
