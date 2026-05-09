@@ -27,3 +27,6 @@ __pycache__/
 # system
 .DS_Store
 Thumbs.db
+
+# source image sheets
+img/

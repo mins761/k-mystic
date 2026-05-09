@@ -1,8 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import { FormEvent, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { languages, tarotCards, zodiacSigns } from '@/lib/i18n'
+import { tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 import type { LanguageCode } from '@/types'
 
 type LoveReading = {
@@ -127,7 +129,7 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
               animationDuration: heart.duration,
             }}
           >
-            ♥
+            {'\u2665'}
           </span>
         ))}
         <div className="relative mx-auto max-w-7xl">
@@ -173,7 +175,7 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
               </span>
               <h2 className="mt-6 font-display text-4xl text-white">Combined Message</h2>
               <p className="mt-4 max-w-3xl leading-8 text-mystic-light/76">{reading.combined_message}</p>
-              <p className="mt-5 font-display text-2xl italic text-pink-200">“{reading.affirmation}”</p>
+              <p className="mt-5 font-display text-2xl italic text-pink-200">&quot;{reading.affirmation}&quot;</p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -289,14 +291,18 @@ function LoveCard({
             revealed ? '[transform:rotateY(180deg)]' : ''
           }`}
         >
-          <div className="absolute inset-0 grid place-items-center rounded-xl border-2 border-pink-200/70 bg-gradient-to-br from-fuchsia-800 to-mystic-dark shadow-[0_0_32px_rgba(236,72,153,0.32)] [backface-visibility:hidden]">
-            <span className="font-display text-5xl text-pink-100">♥</span>
-            <span className="absolute bottom-8 text-xs uppercase tracking-[0.28em] text-pink-100/62">K-Mystic</span>
+          <div className="absolute inset-0 overflow-hidden rounded-xl border-2 border-pink-200/70 bg-mystic-dark shadow-[0_0_32px_rgba(236,72,153,0.32)] [backface-visibility:hidden]">
+            <Image src={tarotBacks.classic} alt="" fill sizes="180px" className="object-cover" draggable={false} />
           </div>
-          <div className="absolute inset-0 rounded-xl border-2 border-mystic-gold/70 bg-gradient-to-br from-pink-950 via-fuchsia-900 to-mystic-dark p-5 shadow-gold [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <div className="text-sm uppercase tracking-[0.22em] text-mystic-gold">No. {card.number}</div>
-            <div className="mt-20 font-display text-3xl text-white">{card.name}</div>
-            <div className="mt-8 text-sm text-pink-100/72">{position}</div>
+          <div className="absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-gold [backface-visibility:hidden] [transform:rotateY(180deg)]">
+            <Image
+              src={tarotCardImage(card.number, card.name)}
+              alt={card.name}
+              fill
+              sizes="180px"
+              className="object-cover"
+              draggable={false}
+            />
           </div>
         </div>
       </div>
