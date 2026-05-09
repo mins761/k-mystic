@@ -1,11 +1,11 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import TarotCard from '@/components/TarotCard'
 import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
-import { fullTarotCards } from '@/lib/tarotAssets'
+import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 import type { Fortune, LanguageCode } from '@/types'
 
 type RandomTarotReadingProps = {
@@ -33,19 +33,28 @@ export default function RandomTarotReading({
   subscribe,
 }: RandomTarotReadingProps) {
   const [tarot, setTarot] = useState<Fortune | null>(null)
+  const [spread, setSpread] = useState<number[]>([])
+  const [selectedCard, setSelectedCard] = useState<number | null>(null)
+  const [revealedCards, setRevealedCards] = useState<number[]>([])
 
   useEffect(() => {
     let active = true
 
-    async function loadTarot() {
-      const randomCardNumber = getDailyCardNumber()
+    const dailyChoice = getDailyChoice()
+    setSpread(dailyChoice.spread)
+    setSelectedCard(dailyChoice.selectedCard)
+    if (dailyChoice.selectedCard !== null) {
+      setRevealedCards(dailyChoice.spread)
+      loadTarot(dailyChoice.selectedCard)
+    }
 
+    async function loadTarot(cardNumber: number) {
       if (supabase) {
         const { data } = await supabase
           .from('fortunes')
           .select('*')
           .eq('type', 'tarot')
-          .eq('card_number', randomCardNumber)
+          .eq('card_number', cardNumber)
           .eq('lang', lang)
           .limit(1)
           .maybeSingle()
@@ -56,34 +65,89 @@ export default function RandomTarotReading({
         }
       }
 
-      if (active) setTarot(fallbackTarot(lang, randomCardNumber))
+      if (active) setTarot(fallbackTarot(lang, cardNumber))
     }
 
-    loadTarot()
     return () => {
       active = false
     }
   }, [lang])
 
-  const reading = tarot ?? fallbackTarot(lang, 0)
+  async function chooseCard(cardNumber: number) {
+    if (selectedCard !== null) return
+
+    const choice = getDailyChoice()
+    const nextChoice = { ...choice, selectedCard: cardNumber }
+    saveDailyChoice(nextChoice)
+    setSelectedCard(cardNumber)
+    setTarot(null)
+    setRevealedCards([cardNumber])
+
+    const remainingCards = choice.spread.filter((number) => number !== cardNumber)
+    remainingCards.forEach((number, index) => {
+      window.setTimeout(() => {
+        setRevealedCards((current) => (current.includes(number) ? current : [...current, number]))
+      }, 500 + index * 260)
+    })
+
+    if (supabase) {
+      const { data } = await supabase
+        .from('fortunes')
+        .select('*')
+        .eq('type', 'tarot')
+        .eq('card_number', cardNumber)
+        .eq('lang', lang)
+        .limit(1)
+        .maybeSingle()
+
+      if (data) {
+        setTarot(data as Fortune)
+        return
+      }
+    }
+
+    setTarot(fallbackTarot(lang, cardNumber))
+  }
+
+  const reading = selectedCard !== null ? tarot ?? fallbackTarot(lang, selectedCard) : null
 
   return (
     <>
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-20 md:grid-cols-[0.8fr_1.2fr] md:items-center">
-        <div className="flex justify-center md:justify-start">
-          <TarotCard
-            number={reading.card_number ?? 0}
-            name={reading.card_name ?? 'The Fool'}
-            description={reading.body.slice(0, 112)}
-          />
-        </div>
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{todayTarot}</p>
-          <h2 className="mt-3 font-display text-5xl text-white">{reading.title}</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">{reading.body}</p>
-          <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
-            {readFull}
-          </Link>
+      <section className="mx-auto max-w-7xl px-5 py-20">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{todayTarot}</p>
+            <h2 className="mt-3 font-display text-5xl text-white">
+              {reading ? reading.title : 'Choose one card for today'}
+            </h2>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">
+              {reading
+                ? reading.body
+                : 'Five cards are waiting face down. Let your attention settle, choose one, and your daily reading will open from that card.'}
+            </p>
+            {reading ? (
+              <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
+                {readFull}
+              </Link>
+            ) : null}
+          </div>
+          <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {spread.map((cardNumber, index) => {
+              const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
+              return (
+                <ChoiceTarotCard
+                  key={cardNumber}
+                  cardNumber={cardNumber}
+                  name={card.name}
+                  revealed={revealedCards.includes(cardNumber)}
+                  selected={selectedCard === cardNumber}
+                  disabled={selectedCard !== null}
+                  index={index}
+                  onChoose={() => chooseCard(cardNumber)}
+                />
+              )
+            })}
+          </div>
         </div>
       </section>
 
@@ -91,9 +155,9 @@ export default function RandomTarotReading({
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{lucky}</p>
           <div className="mt-6 grid gap-5 sm:grid-cols-3">
-            <Signal label="Number" value={String(reading.lucky_number ?? 7)} />
-            <Signal label="Color" value={reading.lucky_color ?? 'Gold'} />
-            <Signal label="Match" value={reading.compatibility ?? 'Leo'} />
+            <Signal label="Number" value={reading ? String(reading.lucky_number ?? 7) : '-'} />
+            <Signal label="Color" value={reading?.lucky_color ?? '-'} />
+            <Signal label="Match" value={reading?.compatibility ?? '-'} />
           </div>
         </div>
         <form className="self-end border-l border-mystic-gold/30 pl-6">
@@ -115,30 +179,53 @@ export default function RandomTarotReading({
   )
 }
 
-function getDailyCardNumber() {
+type DailyChoice = {
+  date: string
+  spread: number[]
+  selectedCard: number | null
+}
+
+function getDailyChoice(): DailyChoice {
   const today = localDateKey()
   const storageKey = 'k-mystic-daily-tarot'
 
   try {
     const stored = window.localStorage.getItem(storageKey)
     if (stored) {
-      const parsed = JSON.parse(stored) as { date?: string; cardNumber?: number }
+      const parsed = JSON.parse(stored) as Partial<DailyChoice> & { cardNumber?: number }
+      const selectedCard = typeof parsed.selectedCard === 'number' ? parsed.selectedCard : parsed.cardNumber
       if (
         parsed.date === today &&
-        typeof parsed.cardNumber === 'number' &&
-        parsed.cardNumber >= 0 &&
-        parsed.cardNumber < fullTarotCards.length
+        Array.isArray(parsed.spread) &&
+        parsed.spread.length === 5 &&
+        parsed.spread.every(isValidCardNumber) &&
+        (selectedCard === null || selectedCard === undefined || isValidCardNumber(selectedCard))
       ) {
-        return parsed.cardNumber
+        return { date: today, spread: parsed.spread, selectedCard: selectedCard ?? null }
       }
     }
   } catch {
     window.localStorage.removeItem(storageKey)
   }
 
-  const cardNumber = Math.floor(Math.random() * fullTarotCards.length)
-  window.localStorage.setItem(storageKey, JSON.stringify({ date: today, cardNumber }))
-  return cardNumber
+  const choice = { date: today, spread: drawSpread(), selectedCard: null }
+  saveDailyChoice(choice)
+  return choice
+}
+
+function saveDailyChoice(choice: DailyChoice) {
+  window.localStorage.setItem('k-mystic-daily-tarot', JSON.stringify(choice))
+}
+
+function drawSpread() {
+  return [...fullTarotCards]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5)
+    .map((card) => card.number)
+}
+
+function isValidCardNumber(value: unknown): value is number {
+  return typeof value === 'number' && value >= 0 && value < fullTarotCards.length
 }
 
 function localDateKey() {
@@ -170,5 +257,77 @@ function Signal({ label, value }: { label: string; value: string }) {
       <p className="text-xs uppercase tracking-[0.25em] text-mystic-light/45">{label}</p>
       <p className="mt-3 font-display text-3xl text-white">{value}</p>
     </div>
+  )
+}
+
+function ChoiceTarotCard({
+  cardNumber,
+  name,
+  revealed,
+  selected,
+  disabled,
+  index,
+  onChoose,
+}: {
+  cardNumber: number
+  name: string
+  revealed: boolean
+  selected: boolean
+  disabled: boolean
+  index: number
+  onChoose: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChoose}
+      disabled={disabled}
+      aria-pressed={selected}
+      aria-label={`Choose ${name}`}
+      className={`group w-[118px] bg-transparent p-0 text-center [perspective:1000px] sm:w-[132px] ${
+        disabled ? 'cursor-default' : 'cursor-pointer'
+      }`}
+    >
+      <span
+        className="relative block aspect-[10/17] w-full animate-[choice-rise_0.55s_ease_both]"
+        style={{ animationDelay: `${index * 0.08}s` }}
+      >
+        <span
+          className={`absolute inset-0 rounded-xl transition duration-500 [transform-style:preserve-3d] ${
+            revealed ? '[transform:rotateY(180deg)]' : ''
+          } ${selected ? 'drop-shadow-[0_0_32px_rgba(245,196,81,0.95)]' : 'group-hover:-translate-y-2'}`}
+        >
+          <span className="absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark [backface-visibility:hidden]">
+            <Image src={tarotBacks.gold} alt="" fill sizes="132px" className="object-cover" draggable={false} />
+          </span>
+          <span className="absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark [backface-visibility:hidden] [transform:rotateY(180deg)]">
+            <Image
+              src={tarotCardImage(cardNumber, name)}
+              alt={name}
+              fill
+              sizes="132px"
+              className="object-cover"
+              draggable={false}
+            />
+          </span>
+        </span>
+        {selected ? (
+          <span className="pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 shadow-[0_0_36px_rgba(245,196,81,0.7)]" />
+        ) : null}
+      </span>
+      <span className="mt-3 block min-h-10 text-sm text-mystic-light/72">{revealed ? name : 'Choose'}</span>
+      <style jsx>{`
+        @keyframes choice-rise {
+          from {
+            opacity: 0;
+            transform: translateY(22px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </button>
   )
 }
