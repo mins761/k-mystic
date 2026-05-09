@@ -47,8 +47,21 @@ CREATE TABLE IF NOT EXISTS subscribers_mystic (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS saju_readings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  birth_year INTEGER,
+  birth_month INTEGER,
+  birth_day INTEGER,
+  birth_hour TEXT,
+  gender TEXT,
+  lang TEXT,
+  result JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ALTER TABLE fortunes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscribers_mystic ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saju_readings ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public read fortunes" ON fortunes;
 CREATE POLICY "Public read fortunes"
@@ -58,4 +71,10 @@ USING (true);
 DROP POLICY IF EXISTS "Public insert subscribers" ON subscribers_mystic;
 CREATE POLICY "Public insert subscribers"
 ON subscribers_mystic FOR INSERT TO anon
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role manage saju readings" ON saju_readings;
+CREATE POLICY "Service role manage saju readings"
+ON saju_readings FOR ALL TO service_role
+USING (true)
 WITH CHECK (true);

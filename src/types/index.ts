@@ -34,3 +34,34 @@ export type ZodiacSign =
   | 'capricorn'
   | 'aquarius'
   | 'pisces'
+
+export type SajuPillar = {
+  stem: string
+  branch: string
+  element: 'Wood' | 'Fire' | 'Earth' | 'Metal' | 'Water'
+}
+
+export type SajuResult = {
+  pillars: {
+    year: SajuPillar
+    month: SajuPillar
+    day: SajuPillar
+    hour: SajuPillar
+  }
+  elements: {
+    wood: number
+    fire: number
+    earth: number
+    metal: number
+    water: number
+  }
+  personality: string
+  destiny: string
+  this_year: string
+  love: string
+  career: string
+  health: string
+  lucky_color: string
+  lucky_number: number
+  lucky_direction: string
+}

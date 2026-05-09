@@ -81,6 +81,48 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
         </div>
       </section>
 
+      <section className="relative overflow-hidden px-5 py-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_28%,rgba(34,197,94,0.16),transparent_28%),radial-gradient(circle_at_78%_36%,rgba(245,158,11,0.18),transparent_24%)]" />
+        <div className="relative mx-auto grid max-w-7xl gap-8 border-y border-mystic-gold/25 py-12 md:grid-cols-[1fr_0.9fr] md:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">Korean Saju</p>
+            <h2 className="mt-3 font-display text-5xl text-white">Discover Your Korean Destiny</h2>
+            <p className="mt-4 max-w-xl leading-8 text-mystic-light/70">
+              Enter your birth date and open a Four Pillars reading shaped by Korean astrology.
+            </p>
+          </div>
+          <form action={`/${lang}/saju`} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
+            <input
+              name="year"
+              type="number"
+              min="1900"
+              max="2100"
+              placeholder="Year"
+              className="rounded-full border border-white/10 bg-white/10 px-4 py-3 text-white outline-none focus:border-mystic-gold"
+            />
+            <input
+              name="month"
+              type="number"
+              min="1"
+              max="12"
+              placeholder="Month"
+              className="rounded-full border border-white/10 bg-white/10 px-4 py-3 text-white outline-none focus:border-mystic-gold"
+            />
+            <input
+              name="day"
+              type="number"
+              min="1"
+              max="31"
+              placeholder="Day"
+              className="rounded-full border border-white/10 bg-white/10 px-4 py-3 text-white outline-none focus:border-mystic-gold"
+            />
+            <button className="rounded-full bg-mystic-gold px-5 py-3 font-semibold text-mystic-dark" type="submit">
+              Get Free Reading
+            </button>
+          </form>
+        </div>
+      </section>
+
       <div className="py-12">
         <AdBanner />
       </div>

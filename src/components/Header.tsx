@@ -19,6 +19,7 @@ export default function Header({ lang }: { lang: LanguageCode }) {
           {[
             [t.tarot, 'tarot'],
             [t.horoscope, 'horoscope'],
+            [t.saju, 'saju'],
             [t.compatibility, 'compatibility'],
           ].map(([label, href]) => (
             <Link
