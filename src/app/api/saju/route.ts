@@ -93,7 +93,6 @@ async function generateReading(payload: SajuPayload, fallback: SajuResult): Prom
         ],
         temperature: 0.82,
         max_tokens: 1400,
-        response_format: { type: 'json_object' },
       }),
     })
 

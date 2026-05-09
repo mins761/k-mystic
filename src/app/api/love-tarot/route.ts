@@ -61,7 +61,6 @@ async function generateJson<T extends object>(prompt: string, fallback: T): Prom
         ],
         temperature: 0.86,
         max_tokens: 1100,
-        response_format: { type: 'json_object' },
       }),
     })
 

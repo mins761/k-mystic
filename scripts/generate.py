@@ -115,7 +115,10 @@ def supabase_client() -> Client:
     return create_client(url, key)
 
 
-def extract_json(text: str) -> dict[str, Any]:
+def extract_json(text: Any) -> dict[str, Any]:
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError("Model response content was empty")
+
     cleaned = text.strip()
     cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s*```$", "", cleaned)
@@ -196,11 +199,24 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
 def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
     errors: list[str] = []
     models = openrouter_models()
-    attempts: list[tuple[str, str]] = [(model, key) for key in keys for model in models]
+    attempts: list[tuple[str, str]] = [(model, key) for key in keys for model in models for _ in range(3)]
     random.shuffle(attempts)
 
     for model, api_key in attempts:
+        response: requests.Response | None = None
         try:
+            payload = {
+                "model": model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You generate detailed daily mystic content and return valid JSON only.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.9,
+                "max_tokens": 2000,
+            }
             response = requests.post(
                 OPENROUTER_URL,
                 headers={
@@ -209,27 +225,20 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
                     "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "https://k-mystic.vercel.app"),
                     "X-Title": os.getenv("OPENROUTER_APP_NAME", "K-Mystic"),
                 },
-                json={
-                    "model": model,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": "You generate concise daily mystic content and return valid JSON only.",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": 0.9,
-                    "max_tokens": 2000,
-                    "response_format": {"type": "json_object"},
-                },
+                json=payload,
                 timeout=90,
             )
             response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content")
+            if not isinstance(content, str) or not content.strip():
+                selected_model = data.get("model", model)
+                finish_reason = data.get("choices", [{}])[0].get("finish_reason", "unknown")
+                raise ValueError(f"Empty content from {selected_model} (finish_reason={finish_reason})")
             return extract_json(content)
         except Exception as exc:  # noqa: BLE001 - log and rotate to the next key/model.
             detail = ""
-            if "response" in locals() and response is not None:
+            if response is not None:
                 detail = f" :: {response.text[:240]}"
             errors.append(f"{model}: {exc}{detail}")
         finally:
