@@ -30,7 +30,148 @@ const positions = ['Current Situation', "Partner's Feelings", 'Future Direction'
 const fieldClass =
   'w-full rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-white outline-none focus:border-pink-300'
 
+const loveCopy: Record<
+  LanguageCode,
+  {
+    eyebrow: string
+    title: string
+    subtitle: string
+    positions: string[]
+    reveal: string
+    loading: string
+    tryAgain: string
+    overall: string
+    combined: string
+    luckyDay: string
+    share: string
+    zodiac: string
+    saju: string
+    mySign: string
+    partnerSign: string
+    checkCompatibility: string
+    myBirth: string
+    partnerBirth: string
+    analyzeSaju: string
+    year: string
+    month: string
+    day: string
+    strength: string
+    challenge: string
+    advice: string
+  }
+> = {
+  en: {
+    eyebrow: 'Love Tarot',
+    title: 'Korean Love Tarot',
+    subtitle: 'Reveal the secrets of your heart',
+    positions,
+    reveal: 'Reveal Your Love Reading',
+    loading: 'Reading your heart...',
+    tryAgain: 'Try Again',
+    overall: 'Overall Love Energy',
+    combined: 'Combined Message',
+    luckyDay: 'Lucky day',
+    share: 'Share Your Reading',
+    zodiac: 'Zodiac Compatibility',
+    saju: 'Saju Compatibility',
+    mySign: 'My Sign',
+    partnerSign: 'Partner Sign',
+    checkCompatibility: 'Check Compatibility',
+    myBirth: 'My Birth Date',
+    partnerBirth: 'Partner Birth Date',
+    analyzeSaju: 'Analyze Saju Match',
+    year: 'Year',
+    month: 'Month',
+    day: 'Day',
+    strength: 'Strength',
+    challenge: 'Challenge',
+    advice: 'Advice',
+  },
+  es: {
+    eyebrow: 'Tarot del amor',
+    title: 'Tarot coreano del amor',
+    subtitle: 'Revela los secretos de tu corazón',
+    positions: ['Situación actual', 'Sentimientos de la otra persona', 'Dirección futura'],
+    reveal: 'Revelar mi lectura de amor',
+    loading: 'Leyendo tu corazón...',
+    tryAgain: 'Intentar de nuevo',
+    overall: 'Energía amorosa general',
+    combined: 'Mensaje combinado',
+    luckyDay: 'Día de suerte',
+    share: 'Compartir lectura',
+    zodiac: 'Compatibilidad zodiacal',
+    saju: 'Compatibilidad Saju',
+    mySign: 'Mi signo',
+    partnerSign: 'Signo de la otra persona',
+    checkCompatibility: 'Comprobar compatibilidad',
+    myBirth: 'Mi fecha de nacimiento',
+    partnerBirth: 'Fecha de nacimiento de la otra persona',
+    analyzeSaju: 'Analizar compatibilidad Saju',
+    year: 'Ano',
+    month: 'Mes',
+    day: 'Dia',
+    strength: 'Fortaleza',
+    challenge: 'Desafío',
+    advice: 'Consejo',
+  },
+  ja: {
+    eyebrow: '恋愛タロット',
+    title: '韓国式恋愛タロット',
+    subtitle: 'あなたの心の秘密を明らかにします',
+    positions: ['現在の状況', '相手の気持ち', 'これからの流れ'],
+    reveal: '恋愛リーディングを開く',
+    loading: '心を読み解いています...',
+    tryAgain: 'もう一度',
+    overall: '今日の恋愛エネルギー',
+    combined: '総合メッセージ',
+    luckyDay: '恋のラッキーデー',
+    share: 'リーディングを共有',
+    zodiac: '星座の相性',
+    saju: '四柱推命の相性',
+    mySign: '自分の星座',
+    partnerSign: '相手の星座',
+    checkCompatibility: '相性を見る',
+    myBirth: '自分の生年月日',
+    partnerBirth: '相手の生年月日',
+    analyzeSaju: '四柱相性を分析',
+    year: '年',
+    month: '月',
+    day: '日',
+    strength: '強み',
+    challenge: '課題',
+    advice: '助言',
+  },
+  'zh-TW': {
+    eyebrow: '愛情塔羅',
+    title: '韓式愛情塔羅',
+    subtitle: '揭開你內心的秘密',
+    positions: ['目前狀況', '對方心意', '未來走向'],
+    reveal: '揭曉我的愛情解讀',
+    loading: '正在解讀你的心...',
+    tryAgain: '再試一次',
+    overall: '今日愛情能量',
+    combined: '綜合訊息',
+    luckyDay: '愛情幸運日',
+    share: '分享解讀',
+    zodiac: '星座合盤',
+    saju: '四柱愛情合盤',
+    mySign: '我的星座',
+    partnerSign: '對方星座',
+    checkCompatibility: '查看契合度',
+    myBirth: '我的生日',
+    partnerBirth: '對方生日',
+    analyzeSaju: '分析四柱合盤',
+    year: '年',
+    month: '月',
+    day: '日',
+    strength: '優勢',
+    challenge: '課題',
+    advice: '建議',
+  },
+}
+
 export default function LovePage({ params }: { params: { lang: LanguageCode } }) {
+  const copy = loveCopy[params.lang]
   const [cards, setCards] = useState(() => drawLoveCards())
   const [revealed, setRevealed] = useState(0)
   const [reading, setReading] = useState<LoveReading | null>(null)
@@ -65,6 +206,7 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
         card2: cards[1].name,
         card3: cards[2].name,
         language: languages[params.lang].name,
+        lang: params.lang,
       }),
     })
     const data = await response.json()
@@ -91,6 +233,7 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
         mySign: form.get('mySign'),
         partnerSign: form.get('partnerSign'),
         language: languages[params.lang].name,
+        lang: params.lang,
       }),
     })
     setZodiacResult((await response.json()) as CompatibilityResult)
@@ -111,6 +254,7 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
         partnerMonth: Number(form.get('partnerMonth')),
         partnerDay: Number(form.get('partnerDay')),
         language: languages[params.lang].name,
+        lang: params.lang,
       }),
     })
     setSajuResult((await response.json()) as CompatibilityResult)
@@ -133,16 +277,16 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
           </span>
         ))}
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-sm uppercase tracking-[0.32em] text-pink-100/80">Love Tarot</p>
-          <h1 className="mt-5 font-display text-6xl leading-none text-white md:text-8xl">Korean Love Tarot</h1>
-          <p className="mt-5 max-w-xl text-2xl text-pink-50/82">Reveal the secrets of your heart</p>
+          <p className="text-sm uppercase tracking-[0.32em] text-pink-100/80">{copy.eyebrow}</p>
+          <h1 className="mt-5 font-display text-6xl leading-none text-white md:text-8xl">{copy.title}</h1>
+          <p className="mt-5 max-w-xl text-2xl text-pink-50/82">{copy.subtitle}</p>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-7 md:grid-cols-3">
           {cards.map((card, index) => (
-            <LoveCard key={`${card.number}-${index}`} card={card} position={positions[index]} revealed={revealed > index} />
+            <LoveCard key={`${card.number}-${index}`} card={card} position={copy.positions[index]} revealed={revealed > index} />
           ))}
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -151,29 +295,29 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
             disabled={loading}
             className="rounded-full bg-pink-400 px-7 py-3 font-semibold text-mystic-dark transition hover:bg-pink-300 disabled:cursor-wait disabled:opacity-70"
           >
-            {loading ? 'Reading your heart...' : 'Reveal Your Love Reading'}
+            {loading ? copy.loading : copy.reveal}
           </button>
           <button
             onClick={tryAgain}
             className="rounded-full border border-white/18 px-7 py-3 font-semibold text-white transition hover:border-pink-300 hover:text-pink-200"
           >
-            Try Again
+            {copy.tryAgain}
           </button>
         </div>
 
         {reading ? (
           <section className="reading-result mt-16">
             <div className="grid gap-6 md:grid-cols-2">
-              <ReadingBlock title="Overall Love Energy" body={reading.overall} delay="0s" />
-              <ReadingBlock title={positions[0]} body={reading.card1_reading} delay="0.12s" />
-              <ReadingBlock title={positions[1]} body={reading.card2_reading} delay="0.24s" />
-              <ReadingBlock title={positions[2]} body={reading.card3_reading} delay="0.36s" />
+              <ReadingBlock title={copy.overall} body={reading.overall} delay="0s" />
+              <ReadingBlock title={copy.positions[0]} body={reading.card1_reading} delay="0.12s" />
+              <ReadingBlock title={copy.positions[1]} body={reading.card2_reading} delay="0.24s" />
+              <ReadingBlock title={copy.positions[2]} body={reading.card3_reading} delay="0.36s" />
             </div>
             <div className="mt-8 border-t border-pink-300/30 pt-7">
               <span className="rounded-full bg-mystic-gold px-4 py-2 text-sm font-semibold text-mystic-dark">
-                Lucky day: {reading.lucky_day}
+                {copy.luckyDay}: {reading.lucky_day}
               </span>
-              <h2 className="mt-6 font-display text-4xl text-white">Combined Message</h2>
+              <h2 className="mt-6 font-display text-4xl text-white">{copy.combined}</h2>
               <p className="mt-4 max-w-3xl leading-8 text-mystic-light/76">{reading.combined_message}</p>
               <p className="mt-5 font-display text-2xl italic text-pink-200">&quot;{reading.affirmation}&quot;</p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -182,14 +326,14 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
                   onClick={() => navigator.clipboard?.writeText(reading.summary)}
                   className="rounded-full bg-white px-5 py-3 font-semibold text-mystic-dark"
                 >
-                  Share Your Reading
+                  {copy.share}
                 </button>
                 <button
                   type="button"
                   onClick={tryAgain}
                   className="rounded-full border border-white/18 px-5 py-3 font-semibold text-white"
                 >
-                  Try Again
+                  {copy.tryAgain}
                 </button>
               </div>
             </div>
@@ -199,22 +343,22 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
 
       <section className="border-y border-white/10 bg-white/[0.025] px-5 py-16">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
-          <CompatibilityPanel title="Zodiac Compatibility" onSubmit={checkZodiac}>
-            <SelectSign name="mySign" label="My Sign" />
-            <SelectSign name="partnerSign" label="Partner Sign" />
+          <CompatibilityPanel title={copy.zodiac} onSubmit={checkZodiac}>
+            <SelectSign name="mySign" label={copy.mySign} />
+            <SelectSign name="partnerSign" label={copy.partnerSign} />
             <button className="rounded-full bg-mystic-gold px-5 py-3 font-semibold text-mystic-dark" type="submit">
-              Check Compatibility
+              {copy.checkCompatibility}
             </button>
-            {zodiacResult ? <CompatibilityResultView result={zodiacResult} /> : null}
+            {zodiacResult ? <CompatibilityResultView result={zodiacResult} copy={copy} /> : null}
           </CompatibilityPanel>
 
-          <CompatibilityPanel title="Saju Compatibility" onSubmit={checkSaju}>
-            <BirthInputs prefix="my" label="My Birth Date" />
-            <BirthInputs prefix="partner" label="Partner Birth Date" />
+          <CompatibilityPanel title={copy.saju} onSubmit={checkSaju}>
+            <BirthInputs prefix="my" label={copy.myBirth} copy={copy} />
+            <BirthInputs prefix="partner" label={copy.partnerBirth} copy={copy} />
             <button className="rounded-full bg-pink-400 px-5 py-3 font-semibold text-mystic-dark" type="submit">
-              Analyze Saju Match
+              {copy.analyzeSaju}
             </button>
-            {sajuResult ? <CompatibilityResultView result={sajuResult} /> : null}
+            {sajuResult ? <CompatibilityResultView result={sajuResult} copy={copy} /> : null}
           </CompatibilityPanel>
         </div>
       </section>
@@ -367,27 +511,33 @@ function SelectSign({ name, label }: { name: string; label: string }) {
   )
 }
 
-function BirthInputs({ prefix, label }: { prefix: string; label: string }) {
+function BirthInputs({ prefix, label, copy }: { prefix: string; label: string; copy: (typeof loveCopy)[LanguageCode] }) {
   return (
     <fieldset>
       <legend className="mb-2 text-xs uppercase tracking-[0.2em] text-mystic-light/52">{label}</legend>
       <div className="grid grid-cols-3 gap-2">
-        <input name={`${prefix}Year`} type="number" min="1900" max="2100" required placeholder="Year" className={fieldClass} />
-        <input name={`${prefix}Month`} type="number" min="1" max="12" required placeholder="Month" className={fieldClass} />
-        <input name={`${prefix}Day`} type="number" min="1" max="31" required placeholder="Day" className={fieldClass} />
+        <input name={`${prefix}Year`} type="number" min="1900" max="2100" required placeholder={copy.year} className={fieldClass} />
+        <input name={`${prefix}Month`} type="number" min="1" max="12" required placeholder={copy.month} className={fieldClass} />
+        <input name={`${prefix}Day`} type="number" min="1" max="31" required placeholder={copy.day} className={fieldClass} />
       </div>
     </fieldset>
   )
 }
 
-function CompatibilityResultView({ result }: { result: CompatibilityResult }) {
+function CompatibilityResultView({
+  result,
+  copy,
+}: {
+  result: CompatibilityResult
+  copy: (typeof loveCopy)[LanguageCode]
+}) {
   return (
     <div className="border-t border-white/10 pt-5">
       <div className="font-display text-5xl text-mystic-gold">{result.score}%</div>
       <p className="mt-3 leading-7 text-mystic-light/74">{result.description}</p>
-      {result.strength ? <p className="mt-3 text-sm text-pink-200">Strength: {result.strength}</p> : null}
-      {result.challenge ? <p className="mt-2 text-sm text-mystic-light/66">Challenge: {result.challenge}</p> : null}
-      {result.advice ? <p className="mt-2 text-sm text-mystic-gold">Advice: {result.advice}</p> : null}
+      {result.strength ? <p className="mt-3 text-sm text-pink-200">{copy.strength}: {result.strength}</p> : null}
+      {result.challenge ? <p className="mt-2 text-sm text-mystic-light/66">{copy.challenge}: {result.challenge}</p> : null}
+      {result.advice ? <p className="mt-2 text-sm text-mystic-gold">{copy.advice}: {result.advice}</p> : null}
     </div>
   )
 }

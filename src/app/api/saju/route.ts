@@ -28,6 +28,8 @@ const branchElements = [
   'Water',
 ] as const
 
+type Lang = 'en' | 'es' | 'ja' | 'zh-TW'
+
 type SajuPayload = {
   name?: string
   year: number
@@ -179,20 +181,153 @@ function calculateSaju(payload: SajuPayload): SajuResult {
   }
   const elements = elementBalance(pillars)
   const dominant = dominantElement(elements)
+  const text = localizedSajuText(payload, dominant)
 
   return {
     pillars,
     elements,
-    personality: `Your chart carries a strong ${dominant} signature, giving your nature a distinct rhythm of instinct, timing, and inner resolve. You are at your best when you trust repeated patterns instead of forcing sudden answers.`,
-    destiny: 'Your life path favors steady refinement. The pillars suggest that meaningful opportunities arrive when discipline, intuition, and practical choices are allowed to support one another.',
-    this_year: 'In 2026, your fortune asks for cleaner priorities and fewer scattered promises. Choose the commitments that strengthen your future and release obligations that drain your focus.',
-    love: 'In relationships, warmth grows through consistency. Honest words, thoughtful timing, and small acts of loyalty will matter more than dramatic gestures.',
-    career: 'Career and wealth energy improves when you build repeatable systems. This is a favorable chart for patient planning, skill-building, and financial decisions made with a calm mind.',
-    health: 'Your body responds well to regular rest, simple food, and balanced movement. Guard your energy during stressful seasons and listen early when fatigue appears.',
-    lucky_color: dominant === 'Wood' ? 'forest green' : dominant === 'Fire' ? 'crimson' : dominant === 'Earth' ? 'golden yellow' : dominant === 'Metal' ? 'pearl white' : 'deep blue',
+    personality: text.personality,
+    destiny: text.destiny,
+    this_year: text.this_year,
+    love: text.love,
+    career: text.career,
+    health: text.health,
+    lucky_color: text.lucky_color,
     lucky_number: (payload.day % 9) + 1,
-    lucky_direction: dominant === 'Wood' ? 'East' : dominant === 'Fire' ? 'South' : dominant === 'Metal' ? 'West' : dominant === 'Water' ? 'North' : 'Center',
+    lucky_direction: text.lucky_direction,
   }
+}
+
+function getLang(payload: SajuPayload): Lang {
+  if (payload.lang === 'es' || payload.lang === 'ja' || payload.lang === 'zh-TW') return payload.lang
+  if (payload.language === 'Spanish') return 'es'
+  if (payload.language === 'Japanese') return 'ja'
+  if (payload.language === 'Traditional Chinese') return 'zh-TW'
+  return 'en'
+}
+
+function localizedSajuText(payload: SajuPayload, dominant: string) {
+  const lang = getLang(payload)
+  const color = elementColor(dominant, lang)
+  const direction = elementDirection(dominant, lang)
+  const element = elementName(dominant, lang)
+  const texts = {
+    en: {
+      personality: `Your chart carries a strong ${element} signature, giving your nature a distinct rhythm of instinct, timing, and inner resolve. You are at your best when you trust repeated patterns instead of forcing sudden answers.`,
+      destiny:
+        'Your life path favors steady refinement. The pillars suggest that meaningful opportunities arrive when discipline, intuition, and practical choices are allowed to support one another.',
+      this_year:
+        'In 2026, your fortune asks for cleaner priorities and fewer scattered promises. Choose the commitments that strengthen your future and release obligations that drain your focus.',
+      love:
+        'In relationships, warmth grows through consistency. Honest words, thoughtful timing, and small acts of loyalty will matter more than dramatic gestures.',
+      career:
+        'Career and wealth energy improves when you build repeatable systems. This is a favorable chart for patient planning, skill-building, and financial decisions made with a calm mind.',
+      health:
+        'Your body responds well to regular rest, simple food, and balanced movement. Guard your energy during stressful seasons and listen early when fatigue appears.',
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    es: {
+      personality: `Tu carta muestra una fuerte influencia de ${element}, dando a tu naturaleza un ritmo claro de instinto, oportunidad y voluntad interior. Brillas mas cuando observas los patrones repetidos antes de forzar respuestas rapidas.`,
+      destiny:
+        'Tu camino vital favorece el refinamiento constante. Los pilares indican que las oportunidades importantes llegan cuando disciplina, intuicion y decisiones practicas trabajan juntas.',
+      this_year:
+        'En 2026, tu fortuna pide prioridades mas limpias y menos promesas dispersas. Elige compromisos que fortalezcan tu futuro y suelta lo que agota tu enfoque.',
+      love:
+        'En el amor, la calidez crece mediante constancia. Las palabras honestas, el buen momento y los pequenos actos de lealtad pesaran mas que los gestos dramaticos.',
+      career:
+        'La energia profesional y economica mejora cuando construyes sistemas repetibles. Es una carta favorable para planificar con paciencia, desarrollar habilidades y decidir con calma.',
+      health:
+        'Tu cuerpo responde bien al descanso regular, comida simple y movimiento equilibrado. Protege tu energia en epocas de estres y escucha temprano las senales de cansancio.',
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    ja: {
+      personality: `あなたの命式には${element}の気が強く流れ、直感、間合い、内なる粘り強さに独特のリズムを与えています。急いで答えを出すより、繰り返し現れる流れを信じるほど本来の力が開きます。`,
+      destiny:
+        'あなたの人生は、少しずつ磨き上げることで運が育つ型です。規律、直感、現実的な選択が互いを支えた時、大切な機会が静かに近づきます。',
+      this_year:
+        '2026年は、優先順位を整え、散らばった約束を減らすことが開運の鍵です。未来を強くする約束を選び、集中力を奪う負担は手放しましょう。',
+      love:
+        '恋愛では、派手な言葉よりも継続した温かさが信頼を育てます。正直な会話、思いやりのあるタイミング、小さな誠実さが関係を深めます。',
+      career:
+        '仕事と財運は、再現できる仕組みを作るほど安定します。落ち着いた計画、技術の積み上げ、慎重な金銭判断に追い風があります。',
+      health:
+        '体は規則的な休息、素朴な食事、無理のない運動に良く反応します。忙しい時期ほど気力を守り、疲れのサインを早めに受け止めてください。',
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    'zh-TW': {
+      personality: `你的命盤帶有強烈的${element}氣息，讓你的本性具有直覺、時機感與內在韌性。當你相信反覆出現的徵兆，而不是急著尋找答案時，力量會更穩定地展開。`,
+      destiny:
+        '你的人生道路偏向穩定打磨。四柱顯示，當紀律、直覺與務實選擇彼此配合時，重要機會會以安靜卻明確的方式靠近。',
+      this_year:
+        '2026年，你的運勢提醒你整理優先順序，減少分散的承諾。選擇能強化未來的責任，放下消耗專注力的牽絆。',
+      love:
+        '感情中，溫暖會透過穩定累積。真誠的話語、合適的時機，以及小小但持續的忠誠，比戲劇化表現更能打動人心。',
+      career:
+        '事業與財運會在你建立可重複的系統時提升。這是適合耐心規劃、累積技能，並以冷靜心態做財務決定的命盤。',
+      health:
+        '你的身體適合規律休息、簡單飲食與平衡活動。壓力高時要守住元氣，疲倦一出現就及早調整。',
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+  }
+  return texts[lang]
+}
+
+function elementName(dominant: string, lang: Lang) {
+  const names = {
+    en: { Wood: 'Wood', Fire: 'Fire', Earth: 'Earth', Metal: 'Metal', Water: 'Water' },
+    es: { Wood: 'Madera', Fire: 'Fuego', Earth: 'Tierra', Metal: 'Metal', Water: 'Agua' },
+    ja: { Wood: '木', Fire: '火', Earth: '土', Metal: '金', Water: '水' },
+    'zh-TW': { Wood: '木', Fire: '火', Earth: '土', Metal: '金', Water: '水' },
+  } as const
+  return names[lang][dominant as keyof (typeof names)['en']] ?? names[lang].Water
+}
+
+function elementColor(dominant: string, lang: Lang) {
+  const colors = {
+    en: {
+      Wood: 'forest green',
+      Fire: 'crimson',
+      Earth: 'golden yellow',
+      Metal: 'pearl white',
+      Water: 'deep blue',
+    },
+    es: {
+      Wood: 'verde bosque',
+      Fire: 'carmesi',
+      Earth: 'amarillo dorado',
+      Metal: 'blanco perla',
+      Water: 'azul profundo',
+    },
+    ja: {
+      Wood: '森の緑',
+      Fire: '深紅',
+      Earth: '黄金色',
+      Metal: '真珠の白',
+      Water: '深い青',
+    },
+    'zh-TW': {
+      Wood: '森林綠',
+      Fire: '深紅色',
+      Earth: '金黃色',
+      Metal: '珍珠白',
+      Water: '深藍色',
+    },
+  } as const
+  return colors[lang][dominant as keyof (typeof colors)['en']] ?? colors[lang].Water
+}
+
+function elementDirection(dominant: string, lang: Lang) {
+  const directions = {
+    en: { Wood: 'East', Fire: 'South', Earth: 'Center', Metal: 'West', Water: 'North' },
+    es: { Wood: 'Este', Fire: 'Sur', Earth: 'Centro', Metal: 'Oeste', Water: 'Norte' },
+    ja: { Wood: '東', Fire: '南', Earth: '中央', Metal: '西', Water: '北' },
+    'zh-TW': { Wood: '東方', Fire: '南方', Earth: '中央', Metal: '西方', Water: '北方' },
+  } as const
+  return directions[lang][dominant as keyof (typeof directions)['en']] ?? directions[lang].Water
 }
 
 function makePillar(index: number): SajuPillar {

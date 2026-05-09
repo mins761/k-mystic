@@ -22,7 +22,163 @@ const birthHours = [
   ['해', '亥 21:00-23:00'],
 ]
 
+const sajuCopy: Record<
+  LanguageCode,
+  {
+    eyebrow: string
+    title: string
+    subtitle: string
+    name: string
+    optional: string
+    gender: string
+    female: string
+    male: string
+    nonbinary: string
+    unspecified: string
+    birthYear: string
+    birthMonth: string
+    birthDay: string
+    birthHour: string
+    unknown: string
+    loading: string
+    reveal: string
+    fourPillars: string
+    fiveElements: string
+    personality: string
+    destiny: string
+    thisYear: string
+    love: string
+    career: string
+    health: string
+    luckyColor: string
+    luckyNumber: string
+    luckyDirection: string
+  }
+> = {
+  en: {
+    eyebrow: 'Korean Saju',
+    title: 'Korean Four Pillars Reading',
+    subtitle: 'Discover your destiny through ancient Korean astrology',
+    name: 'Name',
+    optional: 'Optional',
+    gender: 'Gender',
+    female: 'Female',
+    male: 'Male',
+    nonbinary: 'Non-binary',
+    unspecified: 'Prefer not to say',
+    birthYear: 'Birth Year',
+    birthMonth: 'Birth Month',
+    birthDay: 'Birth Day',
+    birthHour: 'Birth Hour',
+    unknown: 'Unknown',
+    loading: 'Reading the pillars...',
+    reveal: 'Reveal My Saju',
+    fourPillars: 'Four Pillars',
+    fiveElements: 'Five Elements',
+    personality: 'Innate Personality',
+    destiny: 'Destiny Themes',
+    thisYear: "This Year's Fortune",
+    love: 'Love Fortune',
+    career: 'Career & Wealth',
+    health: 'Health Guidance',
+    luckyColor: 'Lucky Color',
+    luckyNumber: 'Lucky Number',
+    luckyDirection: 'Lucky Direction',
+  },
+  es: {
+    eyebrow: 'Saju coreano',
+    title: 'Lectura coreana de los Cuatro Pilares',
+    subtitle: 'Descubre tu destino con la antigua astrologia coreana',
+    name: 'Nombre',
+    optional: 'Opcional',
+    gender: 'Genero',
+    female: 'Femenino',
+    male: 'Masculino',
+    nonbinary: 'No binario',
+    unspecified: 'Prefiero no decirlo',
+    birthYear: 'Ano de nacimiento',
+    birthMonth: 'Mes de nacimiento',
+    birthDay: 'Dia de nacimiento',
+    birthHour: 'Hora de nacimiento',
+    unknown: 'Desconocida',
+    loading: 'Leyendo tus pilares...',
+    reveal: 'Revelar mi Saju',
+    fourPillars: 'Cuatro Pilares',
+    fiveElements: 'Cinco Elementos',
+    personality: 'Personalidad innata',
+    destiny: 'Temas del destino',
+    thisYear: 'Fortuna de este ano',
+    love: 'Fortuna amorosa',
+    career: 'Carrera y riqueza',
+    health: 'Guia de salud',
+    luckyColor: 'Color de suerte',
+    luckyNumber: 'Numero de suerte',
+    luckyDirection: 'Direccion de suerte',
+  },
+  ja: {
+    eyebrow: '韓国式四柱',
+    title: '韓国式四柱推命リーディング',
+    subtitle: '古代韓国占星術であなたの運命を読み解きます',
+    name: '名前',
+    optional: '任意',
+    gender: '性別',
+    female: '女性',
+    male: '男性',
+    nonbinary: 'ノンバイナリー',
+    unspecified: '回答しない',
+    birthYear: '生年',
+    birthMonth: '生月',
+    birthDay: '生日',
+    birthHour: '出生時間',
+    unknown: '不明',
+    loading: '四柱を読み解いています...',
+    reveal: '四柱を開く',
+    fourPillars: '四柱八字',
+    fiveElements: '五行分析',
+    personality: '生まれ持った性質',
+    destiny: '運命のテーマ',
+    thisYear: '今年の運勢',
+    love: '恋愛運',
+    career: '仕事と財運',
+    health: '健康の導き',
+    luckyColor: 'ラッキーカラー',
+    luckyNumber: 'ラッキーナンバー',
+    luckyDirection: '吉方位',
+  },
+  'zh-TW': {
+    eyebrow: '韓國四柱',
+    title: '韓國四柱八字解讀',
+    subtitle: '透過古老韓國命理探索你的命運',
+    name: '姓名',
+    optional: '選填',
+    gender: '性別',
+    female: '女性',
+    male: '男性',
+    nonbinary: '非二元',
+    unspecified: '不透露',
+    birthYear: '出生年份',
+    birthMonth: '出生月份',
+    birthDay: '出生日期',
+    birthHour: '出生時辰',
+    unknown: '未知',
+    loading: '正在解讀四柱...',
+    reveal: '揭曉我的四柱',
+    fourPillars: '四柱八字',
+    fiveElements: '五行分析',
+    personality: '天生性格',
+    destiny: '命運主題',
+    thisYear: '今年運勢',
+    love: '愛情運',
+    career: '事業與財運',
+    health: '健康指引',
+    luckyColor: '幸運色',
+    luckyNumber: '幸運數字',
+    luckyDirection: '幸運方位',
+  },
+}
+
 export default function SajuPage({ params }: { params: { lang: LanguageCode } }) {
+  const copy = sajuCopy[params.lang]
   const [result, setResult] = useState<SajuResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -66,12 +222,12 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(245,158,11,0.22),transparent_28%),radial-gradient(circle_at_78%_28%,rgba(34,197,94,0.14),transparent_24%),linear-gradient(135deg,#0A0A1A,#181034_46%,#090917)]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-end">
           <div>
-            <p className="text-sm uppercase tracking-[0.32em] text-mystic-gold">Korean Saju</p>
+            <p className="text-sm uppercase tracking-[0.32em] text-mystic-gold">{copy.eyebrow}</p>
             <h1 className="mt-5 max-w-3xl font-display text-6xl leading-none text-white md:text-7xl">
-              Korean Four Pillars Reading
+              {copy.title}
             </h1>
             <p className="mt-5 max-w-xl text-xl leading-8 text-mystic-light/72">
-              Discover your destiny through ancient Korean astrology
+              {copy.subtitle}
             </p>
           </div>
           <form
@@ -79,29 +235,29 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
             className="rounded-lg border border-mystic-gold/30 bg-mystic-dark/70 p-5 shadow-gold backdrop-blur"
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name">
-                <input name="name" placeholder="Optional" className="input" />
+              <Field label={copy.name}>
+                <input name="name" placeholder={copy.optional} className="input" />
               </Field>
-              <Field label="Gender">
+              <Field label={copy.gender}>
                 <select name="gender" className="input" defaultValue="unspecified">
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="nonbinary">Non-binary</option>
-                  <option value="unspecified">Prefer not to say</option>
+                  <option value="female">{copy.female}</option>
+                  <option value="male">{copy.male}</option>
+                  <option value="nonbinary">{copy.nonbinary}</option>
+                  <option value="unspecified">{copy.unspecified}</option>
                 </select>
               </Field>
-              <Field label="Birth Year">
+              <Field label={copy.birthYear}>
                 <input name="year" type="number" min="1900" max="2100" required placeholder="1994" className="input" />
               </Field>
-              <Field label="Birth Month">
+              <Field label={copy.birthMonth}>
                 <input name="month" type="number" min="1" max="12" required placeholder="7" className="input" />
               </Field>
-              <Field label="Birth Day">
+              <Field label={copy.birthDay}>
                 <input name="day" type="number" min="1" max="31" required placeholder="21" className="input" />
               </Field>
-              <Field label="Birth Hour">
+              <Field label={copy.birthHour}>
                 <select name="hour" className="input" defaultValue="">
-                  <option value="">Unknown</option>
+                  <option value="">{copy.unknown}</option>
                   {birthHours.map(([value, label]) => (
                     <option key={value} value={value}>
                       {label}
@@ -115,7 +271,7 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
               disabled={loading}
               className="mt-5 w-full rounded-full bg-mystic-gold px-6 py-3 font-semibold text-mystic-dark transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-70"
             >
-              {loading ? 'Reading the pillars...' : 'Reveal My Saju'}
+              {loading ? copy.loading : copy.reveal}
             </button>
             {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
           </form>
@@ -126,13 +282,13 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
         <section className="mx-auto max-w-7xl px-5 py-16">
           <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">Four Pillars</p>
+              <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">{copy.fourPillars}</p>
               <div className="mt-6">
                 <SajuTable pillars={result.pillars} />
               </div>
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">Five Elements</p>
+              <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">{copy.fiveElements}</p>
               <div className="mt-6">
                 <ElementChart elements={result.elements} />
               </div>
@@ -140,18 +296,18 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
           </div>
 
           <div className="mt-16 grid gap-x-9 gap-y-10 md:grid-cols-2">
-            <ReadingBlock title="Innate Personality" body={result.personality} />
-            <ReadingBlock title="Destiny Themes" body={result.destiny} />
-            <ReadingBlock title="This Year's Fortune" body={result.this_year} />
-            <ReadingBlock title="Love Fortune" body={result.love} />
-            <ReadingBlock title="Career & Wealth" body={result.career} />
-            <ReadingBlock title="Health Guidance" body={result.health} />
+            <ReadingBlock title={copy.personality} body={result.personality} />
+            <ReadingBlock title={copy.destiny} body={result.destiny} />
+            <ReadingBlock title={copy.thisYear} body={result.this_year} />
+            <ReadingBlock title={copy.love} body={result.love} />
+            <ReadingBlock title={copy.career} body={result.career} />
+            <ReadingBlock title={copy.health} body={result.health} />
           </div>
 
           <div className="mt-12 grid gap-5 border-t border-mystic-gold/30 pt-8 sm:grid-cols-3">
-            <Lucky label="Lucky Color" value={result.lucky_color} />
-            <Lucky label="Lucky Number" value={String(result.lucky_number)} />
-            <Lucky label="Lucky Direction" value={result.lucky_direction} />
+            <Lucky label={copy.luckyColor} value={result.lucky_color} />
+            <Lucky label={copy.luckyNumber} value={String(result.lucky_number)} />
+            <Lucky label={copy.luckyDirection} value={result.lucky_direction} />
           </div>
         </section>
       ) : null}
