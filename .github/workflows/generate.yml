@@ -20,7 +20,7 @@ jobs:
         run: pip install requests supabase python-dotenv
 
       - name: Generate daily fortunes
-        run: python scripts/generate.py
+        run: python scripts/generate_horoscope.py
         env:
           PYTHONUNBUFFERED: "1"
           OPENROUTER_SLEEP_SECONDS: "0.5"

@@ -23,20 +23,22 @@ function randomNumber(min: number, max: number) {
 
 export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
   const today = todayIso()
+  const cardNumber = Math.floor(Math.random() * tarotCards.length)
 
   if (supabase) {
     const { data } = await supabase
       .from('fortunes')
       .select('*')
-      .eq('fortune_date', today)
       .eq('lang', lang)
       .eq('type', 'tarot')
-      .limit(20)
+      .eq('card_number', cardNumber)
+      .limit(1)
+      .maybeSingle()
 
-    if (data?.length) return randomItem(data) as Fortune
+    if (data) return data as Fortune
   }
 
-  const card = randomItem(tarotCards)
+  const card = tarotCards[cardNumber]
   const match = randomItem(zodiacSigns)
   return {
     type: 'tarot',

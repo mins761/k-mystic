@@ -3,10 +3,9 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { headers } from 'next/headers'
 import AdBanner from '@/components/AdBanner'
 import HoroscopeCard from '@/components/HoroscopeCard'
+import RandomTarotReading from '@/components/RandomTarotReading'
 import StarryBackground from '@/components/StarryBackground'
-import TarotCard from '@/components/TarotCard'
 import { dictionary, isLanguage, zodiacSigns } from '@/lib/i18n'
-import { getDailyTarot } from '@/lib/fortune'
 import type { LanguageCode } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +23,6 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
   headers()
   const lang = params.lang
   const t = dictionary[lang]
-  const tarot = await getDailyTarot(lang)
 
   return (
     <main>
@@ -58,23 +56,14 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-20 md:grid-cols-[0.8fr_1.2fr] md:items-center">
-        <div className="flex justify-center md:justify-start">
-          <TarotCard
-            number={tarot.card_number ?? 0}
-            name={tarot.card_name ?? 'The Fool'}
-            description={tarot.body.slice(0, 112)}
-          />
-        </div>
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{t.todayTarot}</p>
-          <h2 className="mt-3 font-display text-5xl text-white">{tarot.title}</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">{tarot.body}</p>
-          <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
-            {t.readFull}
-          </Link>
-        </div>
-      </section>
+      <RandomTarotReading
+        lang={lang}
+        todayTarot={t.todayTarot}
+        readFull={t.readFull}
+        lucky={t.lucky}
+        newsletter={t.newsletter}
+        subscribe={t.subscribe}
+      />
 
       <section className="border-y border-white/10 bg-white/[0.025] px-5 py-20">
         <div className="mx-auto max-w-7xl">
@@ -152,39 +141,6 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
         <AdBanner />
       </div>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-16 md:grid-cols-[1fr_0.8fr]">
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{t.lucky}</p>
-          <div className="mt-6 grid gap-5 sm:grid-cols-3">
-            <Signal label="Number" value={String(tarot.lucky_number ?? 7)} />
-            <Signal label="Color" value={tarot.lucky_color ?? 'Gold'} />
-            <Signal label="Match" value={tarot.compatibility ?? 'Leo'} />
-          </div>
-        </div>
-        <form className="self-end border-l border-mystic-gold/30 pl-6">
-          <h2 className="font-display text-3xl text-white">{t.newsletter}</h2>
-          <div className="mt-5 flex gap-2">
-            <input
-              type="email"
-              required
-              placeholder="you@example.com"
-              className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/10 px-4 py-3 text-white outline-none focus:border-mystic-gold"
-            />
-            <button className="rounded-full bg-mystic-gold px-5 py-3 font-semibold text-mystic-dark" type="submit">
-              {t.subscribe}
-            </button>
-          </div>
-        </form>
-      </section>
     </main>
-  )
-}
-
-function Signal({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-t border-white/15 pt-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-mystic-light/45">{label}</p>
-      <p className="mt-3 font-display text-3xl text-white">{value}</p>
-    </div>
   )
 }

@@ -26,6 +26,9 @@ ALTER TABLE fortunes
 ADD COLUMN IF NOT EXISTS mantra TEXT,
 ADD COLUMN IF NOT EXISTS best_time TEXT;
 
+ALTER TABLE fortunes
+ADD COLUMN IF NOT EXISTS card_number INTEGER;
+
 CREATE INDEX IF NOT EXISTS idx_fortunes_date_lang
 ON fortunes(fortune_date, lang, type);
 
@@ -39,6 +42,10 @@ WHERE type = 'tarot' AND sign IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fortunes_daily_horoscope_unique
 ON fortunes(lang, fortune_date, type, sign)
 WHERE type = 'horoscope' AND sign IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tarot_unique
+ON fortunes(card_number, lang)
+WHERE type = 'tarot' AND card_number IS NOT NULL AND fortune_date IS NULL;
 
 CREATE TABLE IF NOT EXISTS subscribers_mystic (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
