@@ -4,6 +4,12 @@ import type { SajuPillar, SajuResult } from '@/types'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const DEFAULT_MODELS = ['openrouter/free']
+const DEPRECATED_MODELS = new Set([
+  'qwen/qwen-2.5-72b-instruct:free',
+  'deepseek/deepseek-chat-v3-0324:free',
+  'google/gemini-2.0-flash-exp:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+])
 
 const stems = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
 const branches = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해']
@@ -409,11 +415,11 @@ function getOpenRouterKey() {
 }
 
 function pickOpenRouterModel() {
-  const models = (process.env.OPENROUTER_MODELS || '')
+  const customModels = (process.env.OPENROUTER_MODELS || '')
     .split(',')
     .map((model) => model.trim())
-    .filter(Boolean)
-  const list = models.length ? models : DEFAULT_MODELS
+    .filter((model) => model && !DEPRECATED_MODELS.has(model))
+  const list = [...DEFAULT_MODELS, ...customModels.filter((model) => !DEFAULT_MODELS.includes(model))]
   return list[Math.floor(Math.random() * list.length)]
 }
 

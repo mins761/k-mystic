@@ -23,6 +23,12 @@ LANGUAGE_NAMES = {
 }
 
 DEFAULT_MODELS = ["openrouter/free"]
+DEPRECATED_MODELS = {
+    "qwen/qwen-2.5-72b-instruct:free",
+    "deepseek/deepseek-chat-v3-0324:free",
+    "google/gemini-2.0-flash-exp:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+}
 
 ZODIAC_SIGNS = [
     "aries",
@@ -86,8 +92,13 @@ def openrouter_keys() -> list[str]:
 
 def openrouter_models() -> list[str]:
     raw_models = os.getenv("OPENROUTER_MODELS", "")
-    models = [model.strip() for model in raw_models.split(",") if model.strip()]
-    return models or DEFAULT_MODELS
+    custom_models = [
+        model.strip()
+        for model in raw_models.split(",")
+        if model.strip() and model.strip() not in DEPRECATED_MODELS
+    ]
+    models = DEFAULT_MODELS + [model for model in custom_models if model not in DEFAULT_MODELS]
+    return models
 
 
 def supabase_client() -> Client:
@@ -378,6 +389,7 @@ def main() -> None:
     keys = openrouter_keys()
 
     print(f"Generating K-Mystic fortunes for {today}")
+    print(f"OpenRouter models: {', '.join(openrouter_models())}")
     for lang in LANGUAGES:
         generate_tarot(client, keys, lang, today)
         for sign in ZODIAC_SIGNS:
