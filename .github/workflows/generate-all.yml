@@ -1,14 +1,12 @@
-name: K-Mystic Fortune Generator
+name: K-Mystic Prebuild Generator
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
-  generate:
+  generate-all:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -19,13 +17,13 @@ jobs:
       - name: Install dependencies
         run: pip install requests supabase python-dotenv
 
-      - name: Generate daily horoscopes
-        run: python scripts/generate_horoscope.py
+      - name: Generate tarot and compatibility readings
+        run: python scripts/generate_all.py
         env:
           PYTHONUNBUFFERED: "1"
-          OPENROUTER_SLEEP_SECONDS: "0.5"
+          GENERATE_ALL_SLEEP_SECONDS: "2"
+          GENERATE_ALL_MAX_RETRIES: "4"
           OPENROUTER_TIMEOUT_SECONDS: "45"
-          OPENROUTER_ATTEMPTS_PER_MODEL: "2"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

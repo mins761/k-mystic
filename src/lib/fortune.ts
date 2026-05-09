@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
-import { tarotCards, zodiacSigns } from '@/lib/i18n'
+import { zodiacSigns } from '@/lib/i18n'
+import { fullTarotCards } from '@/lib/tarotAssets'
 import type { Fortune, LanguageCode, ZodiacSign } from '@/types'
 
 const sampleBodies: Record<LanguageCode, string> = {
@@ -23,7 +24,7 @@ function randomNumber(min: number, max: number) {
 
 export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
   const today = todayIso()
-  const cardNumber = Math.floor(Math.random() * tarotCards.length)
+  const cardNumber = Math.floor(Math.random() * fullTarotCards.length)
 
   if (supabase) {
     const { data } = await supabase
@@ -38,7 +39,7 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
     if (data) return data as Fortune
   }
 
-  const card = tarotCards[cardNumber]
+  const card = fullTarotCards[cardNumber]
   const match = randomItem(zodiacSigns)
   return {
     type: 'tarot',

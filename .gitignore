@@ -23,6 +23,8 @@ yarn-error.log*
 # python
 __pycache__/
 *.py[cod]
+progress.json
+failed_items.json
 
 # system
 .DS_Store

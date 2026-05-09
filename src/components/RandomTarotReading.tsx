@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import TarotCard from '@/components/TarotCard'
-import { tarotCards, zodiacSigns } from '@/lib/i18n'
+import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
+import { fullTarotCards } from '@/lib/tarotAssets'
 import type { Fortune, LanguageCode } from '@/types'
 
 type RandomTarotReadingProps = {
@@ -37,7 +38,7 @@ export default function RandomTarotReading({
     let active = true
 
     async function loadTarot() {
-      const randomCardNumber = Math.floor(Math.random() * 22)
+      const randomCardNumber = Math.floor(Math.random() * fullTarotCards.length)
 
       if (supabase) {
         const { data } = await supabase
@@ -115,7 +116,7 @@ export default function RandomTarotReading({
 }
 
 function fallbackTarot(lang: LanguageCode, cardNumber: number): Fortune {
-  const card = tarotCards[cardNumber] ?? tarotCards[0]
+  const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
   return {
     type: 'tarot',
     lang,
