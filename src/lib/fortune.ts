@@ -13,6 +13,11 @@ export function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function dailyIndex(seed: string, length: number) {
+  const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return hash % length
+}
+
 export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
   const today = todayIso()
 
@@ -29,7 +34,8 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
     if (data) return data as Fortune
   }
 
-  const card = tarotCards[new Date().getDate() % tarotCards.length]
+  const card = tarotCards[dailyIndex(`${today}:${lang}:tarot`, tarotCards.length)]
+  const luckyNumber = dailyIndex(`${today}:${lang}:number`, 9) + 1
   return {
     type: 'tarot',
     lang,
@@ -37,7 +43,7 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
     body: sampleBodies[lang],
     card_name: card.name,
     card_number: card.number,
-    lucky_number: (new Date().getDate() % 9) + 1,
+    lucky_number: luckyNumber,
     lucky_color: 'gold',
     compatibility: 'leo',
     affirmation: 'I trust the sign that arrives softly and choose the path with courage.',

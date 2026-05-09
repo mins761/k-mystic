@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { unstable_noStore as noStore } from 'next/cache'
+import { headers } from 'next/headers'
 import AdBanner from '@/components/AdBanner'
 import HoroscopeCard from '@/components/HoroscopeCard'
 import StarryBackground from '@/components/StarryBackground'
@@ -6,6 +8,8 @@ import TarotCard from '@/components/TarotCard'
 import { dictionary, isLanguage, zodiacSigns } from '@/lib/i18n'
 import { getDailyTarot } from '@/lib/fortune'
 import type { LanguageCode } from '@/types'
+
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { lang: string } }) {
   const lang = isLanguage(params.lang) ? params.lang : 'en'
@@ -16,6 +20,8 @@ export async function generateMetadata({ params }: { params: { lang: string } })
 }
 
 export default async function HomePage({ params }: { params: { lang: LanguageCode } }) {
+  noStore()
+  headers()
   const lang = params.lang
   const t = dictionary[lang]
   const tarot = await getDailyTarot(lang)

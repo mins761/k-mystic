@@ -1,6 +1,10 @@
+import { unstable_noStore as noStore } from 'next/cache'
+import { headers } from 'next/headers'
 import TarotCard from '@/components/TarotCard'
 import { getDailyTarot } from '@/lib/fortune'
 import type { LanguageCode } from '@/types'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Daily Tarot',
@@ -8,6 +12,8 @@ export const metadata = {
 }
 
 export default async function TarotPage({ params }: { params: { lang: LanguageCode } }) {
+  noStore()
+  headers()
   const tarot = await getDailyTarot(params.lang)
 
   return (
