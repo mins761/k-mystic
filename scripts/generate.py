@@ -219,7 +219,7 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
                         {"role": "user", "content": prompt},
                     ],
                     "temperature": 0.9,
-                    "max_tokens": 900,
+                    "max_tokens": 2000,
                     "response_format": {"type": "json_object"},
                 },
                 timeout=90,
@@ -245,14 +245,17 @@ Generate a detailed, insightful tarot reading for "{card_name}" card in {languag
 
 The reading must feel personal, mystical, and deeply meaningful.
 Do NOT be vague or generic. Be specific and evocative.
+Write minimum 400 words.
+Be deeply detailed and specific.
+DO NOT write short generic content.
 
 Include ALL of these sections:
-1. Overall Energy (3-4 sentences) - the card's core message today
-2. Love & Relationships (3-4 sentences) - specific romantic/relationship guidance
-3. Career & Finance (3-4 sentences) - practical work and money advice
-4. Spiritual Growth (2-3 sentences) - inner wisdom and personal development
-5. Warning & Advice (2-3 sentences) - what to avoid, what to embrace
-6. Affirmation - one powerful positive statement
+- Overall Energy (4-5 sentences) - the card's core message today
+- Love & Relationships (4-5 sentences) - specific romantic/relationship guidance
+- Career & Finance (4-5 sentences) - practical work and money advice
+- Spiritual Growth (3-4 sentences) - inner wisdom and personal development
+- Warning & Advice (3-4 sentences) - what to avoid, what to embrace
+- Today's Affirmation - one powerful positive statement
 
 Lucky number, lucky color, compatible zodiac.
 
@@ -265,7 +268,7 @@ Writing style:
 Return JSON only:
 {{
   "title": "Today's {card_name} Reading: [evocative subtitle]",
-  "body": "... (300-400 words, rich and detailed)",
+  "body": "... (minimum 400 words, rich, detailed, and sectioned)",
   "lucky_number": 7,
   "lucky_color": "deep purple",
   "compatibility": "scorpio",
