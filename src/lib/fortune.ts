@@ -13,9 +13,12 @@ export function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function dailyIndex(seed: string, length: number) {
-  const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
-  return hash % length
+function randomItem<T>(items: readonly T[]) {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
+function randomNumber(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
 export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
@@ -28,14 +31,13 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
       .eq('fortune_date', today)
       .eq('lang', lang)
       .eq('type', 'tarot')
-      .limit(1)
-      .maybeSingle()
+      .limit(20)
 
-    if (data) return data as Fortune
+    if (data?.length) return randomItem(data) as Fortune
   }
 
-  const card = tarotCards[dailyIndex(`${today}:${lang}:tarot`, tarotCards.length)]
-  const luckyNumber = dailyIndex(`${today}:${lang}:number`, 9) + 1
+  const card = randomItem(tarotCards)
+  const match = randomItem(zodiacSigns)
   return {
     type: 'tarot',
     lang,
@@ -43,9 +45,9 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
     body: sampleBodies[lang],
     card_name: card.name,
     card_number: card.number,
-    lucky_number: luckyNumber,
-    lucky_color: 'gold',
-    compatibility: 'leo',
+    lucky_number: randomNumber(1, 9),
+    lucky_color: randomItem(['gold', 'purple', 'silver', 'rose', 'emerald', 'deep blue']),
+    compatibility: match,
     affirmation: 'I trust the sign that arrives softly and choose the path with courage.',
     mantra: null,
     best_time: null,
@@ -64,10 +66,9 @@ export async function getHoroscope(lang: LanguageCode, sign: ZodiacSign): Promis
       .eq('lang', lang)
       .eq('type', 'horoscope')
       .eq('sign', sign)
-      .limit(1)
-      .maybeSingle()
+      .limit(20)
 
-    if (data) return data as Fortune
+    if (data?.length) return randomItem(data) as Fortune
   }
 
   const index = zodiacSigns.indexOf(sign)
@@ -77,9 +78,9 @@ export async function getHoroscope(lang: LanguageCode, sign: ZodiacSign): Promis
     lang,
     title: `${titleCase(sign)}: a steady light`,
     body: sampleBodies[lang],
-    lucky_number: ((index + new Date().getDate()) % 9) + 1,
-    lucky_color: ['purple', 'gold', 'silver', 'rose'][index % 4],
-    compatibility: zodiacSigns[(index + 4) % zodiacSigns.length],
+    lucky_number: randomNumber(1, 9),
+    lucky_color: randomItem(['purple', 'gold', 'silver', 'rose', 'emerald', 'deep blue']),
+    compatibility: randomItem(zodiacSigns.filter((item) => item !== sign)),
     affirmation: 'I move with patience, clarity, and a heart open to the day.',
     mantra: 'I choose the hour that strengthens my spirit.',
     best_time: ['morning', 'afternoon', 'evening'][index % 3],
