@@ -3,7 +3,7 @@ import { languageCodes, zodiacSigns } from '@/lib/i18n'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://k-mystic.vercel.app'
-  const staticPages = ['', '/tarot', '/horoscope', '/saju', '/compatibility', '/about', '/privacy', '/contact']
+  const staticPages = ['', '/tarot', '/horoscope', '/saju', '/love', '/compatibility', '/about', '/privacy', '/contact']
 
   return languageCodes.flatMap((lang) => [
     ...staticPages.map((path) => ({

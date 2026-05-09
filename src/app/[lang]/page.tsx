@@ -123,6 +123,25 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
         </div>
       </section>
 
+      <section className="relative overflow-hidden px-5 py-16">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/24 via-mystic-purple/22 to-transparent" />
+        <div className="relative mx-auto grid max-w-7xl gap-8 border-y border-pink-300/25 py-12 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-pink-200">Love Tarot</p>
+            <h2 className="mt-3 font-display text-5xl text-white">Find Your Love Fortune</h2>
+            <p className="mt-4 max-w-xl leading-8 text-mystic-light/70">
+              Draw three cards for your heart, their feelings, and the direction love wants to take.
+            </p>
+          </div>
+          <Link
+            href={`/${lang}/love`}
+            className="w-fit rounded-full bg-pink-400 px-7 py-3 font-semibold text-mystic-dark transition hover:bg-pink-300"
+          >
+            Start Love Reading
+          </Link>
+        </div>
+      </section>
+
       <div className="py-12">
         <AdBanner />
       </div>
