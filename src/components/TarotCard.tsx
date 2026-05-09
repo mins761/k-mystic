@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 
 type TarotCardProps = {
@@ -13,6 +13,7 @@ type TarotCardProps = {
 
 export default function TarotCard({ number, name, description, back = 'classic' }: TarotCardProps) {
   const [flipped, setFlipped] = useState(false)
+  const cardKey = `${number}-${name}-${back}`
   const particles = useMemo(
     () =>
       Array.from({ length: 24 }, (_, index) => ({
@@ -23,6 +24,10 @@ export default function TarotCard({ number, name, description, back = 'classic' 
       })),
     [],
   )
+
+  useEffect(() => {
+    setFlipped(false)
+  }, [cardKey])
 
   return (
     <button
@@ -47,13 +52,23 @@ export default function TarotCard({ number, name, description, back = 'classic' 
         ))}
       </span>
 
-      <span className={`tarot-card ${flipped ? 'is-flipped' : ''}`}>
-        <span className="card-face card-back" aria-hidden>
-          <Image src={tarotBacks[back]} alt="" fill sizes="200px" className="card-image" draggable={false} />
-        </span>
-        <span className="card-face card-front">
-          <Image src={tarotCardImage(number, name)} alt={name} fill sizes="200px" className="card-image" draggable={false} />
-          <span className="sr-only">{description}</span>
+      <span className="tarot-lift">
+        <span key={cardKey} className={`tarot-card ${flipped ? 'is-flipped' : ''}`}>
+          <span className="card-face card-back" aria-hidden>
+            <Image src={tarotBacks[back]} alt="" fill sizes="200px" className="card-image" draggable={false} />
+          </span>
+          <span className="card-face card-front">
+            <Image
+              src={tarotCardImage(number, name)}
+              alt={name}
+              fill
+              sizes="200px"
+              className="card-image"
+              draggable={false}
+              priority
+            />
+            <span className="sr-only">{description}</span>
+          </span>
         </span>
       </span>
 
@@ -71,26 +86,29 @@ export default function TarotCard({ number, name, description, back = 'classic' 
           animation: tarot-rise 0.7s ease both;
         }
 
+        .tarot-lift {
+          position: absolute;
+          inset: 0;
+          border-radius: 0.75rem;
+          transition:
+            transform 0.35s ease,
+            filter 0.35s ease;
+        }
+
         .tarot-card {
           position: absolute;
           inset: 0;
           border-radius: 0.75rem;
           transform-style: preserve-3d;
-          transition:
-            transform 0.8s cubic-bezier(0.2, 0.72, 0.18, 1),
-            filter 0.35s ease;
+          transition: transform 0.8s cubic-bezier(0.2, 0.72, 0.18, 1);
           box-shadow:
             0 0 22px rgba(245, 158, 11, 0.36),
             0 20px 60px rgba(7, 7, 20, 0.58);
         }
 
-        .tarot-shell:hover .tarot-card {
+        .tarot-shell:hover .tarot-lift {
           filter: drop-shadow(0 0 26px rgba(245, 158, 11, 0.6));
           transform: translateY(-10px);
-        }
-
-        .tarot-shell:hover .tarot-card.is-flipped {
-          transform: translateY(-10px) rotateY(180deg);
         }
 
         .tarot-card.is-flipped {
