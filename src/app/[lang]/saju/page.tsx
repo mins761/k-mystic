@@ -318,8 +318,10 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
         </div>
       </section>
 
+      {loading ? <SajuLoading copy={copy} /> : null}
+
       {result ? (
-        <section className="mx-auto max-w-7xl px-5 py-16">
+        <section className="saju-result mx-auto max-w-7xl px-5 py-16">
           <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
               <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">{copy.fourPillars}</p>
@@ -372,8 +374,172 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
           background: #0a0a1a;
           color: #e2e8f0;
         }
+
+        .saju-result {
+          animation: result-fade 0.8s ease both;
+        }
+
+        @keyframes result-fade {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
       `}</style>
     </main>
+  )
+}
+
+function SajuLoading({ copy }: { copy: (typeof sajuCopy)[LanguageCode] }) {
+  const pillars = [copy.birthYear, copy.birthMonth, copy.birthDay, copy.birthHour]
+  const elements = ['Wood', 'Fire', 'Earth', 'Metal', 'Water']
+
+  return (
+    <section className="mx-auto max-w-7xl px-5 py-14" aria-live="polite">
+      <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+        <div>
+          <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">{copy.fourPillars}</p>
+          <div className="mt-6 overflow-hidden rounded-lg border border-mystic-gold/35 bg-mystic-dark/72 shadow-gold">
+            <div className="grid grid-cols-4">
+              {pillars.map((pillar, index) => (
+                <div key={pillar} className="min-h-44 border-r border-mystic-gold/20 p-4 text-center last:border-r-0">
+                  <p className="text-xs uppercase tracking-[0.22em] text-mystic-light/45">{pillar}</p>
+                  <div className="mx-auto mt-5 h-12 w-12 rounded-full border border-mystic-gold/30 skeleton-pulse" />
+                  <div className="mx-auto mt-4 h-16 w-9 rounded-full bg-white/8 skeleton-rise" style={{ animationDelay: `${index * 0.18}s` }} />
+                  <div className="mx-auto mt-4 h-6 w-20 rounded-full bg-mystic-gold/18 skeleton-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">{copy.fiveElements}</p>
+          <div className="mt-6 grid gap-6 md:grid-cols-[220px_1fr] md:items-center">
+            <div className="saju-orbit mx-auto">
+              <span>{copy.loading}</span>
+            </div>
+            <div className="space-y-4">
+              {elements.map((element, index) => (
+                <div key={element}>
+                  <div className="mb-2 flex justify-between text-sm text-mystic-light/72">
+                    <span>{element}</span>
+                    <span>{20 + index * 7}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="element-fill h-full rounded-full bg-mystic-gold" style={{ animationDelay: `${index * 0.16}s` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-12 grid gap-6 md:grid-cols-2">
+        {[copy.personality, copy.destiny, copy.thisYear, copy.love].map((title, index) => (
+          <article key={title} className="border-t border-white/12 pt-5">
+            <h2 className="font-display text-3xl text-white">{title}</h2>
+            <div className="mt-4 space-y-3">
+              <div className="h-3 w-full rounded-full bg-white/10 skeleton-pulse" style={{ animationDelay: `${index * 0.1}s` }} />
+              <div className="h-3 w-5/6 rounded-full bg-white/10 skeleton-pulse" style={{ animationDelay: `${index * 0.1 + 0.08}s` }} />
+              <div className="h-3 w-2/3 rounded-full bg-white/10 skeleton-pulse" style={{ animationDelay: `${index * 0.1 + 0.16}s` }} />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <style jsx>{`
+        .saju-orbit {
+          position: relative;
+          display: grid;
+          width: 220px;
+          height: 220px;
+          place-items: center;
+          border-radius: 999px;
+          background:
+            radial-gradient(circle, #0a0a1a 0 36%, transparent 37%),
+            conic-gradient(
+              from 0deg,
+              rgba(34, 197, 94, 0.9),
+              rgba(239, 68, 68, 0.88),
+              rgba(245, 196, 81, 0.95),
+              rgba(248, 250, 252, 0.86),
+              rgba(56, 189, 248, 0.9),
+              rgba(34, 197, 94, 0.9)
+            );
+          box-shadow: 0 0 44px rgba(245, 158, 11, 0.2);
+          animation: saju-spin 5.2s linear infinite;
+        }
+
+        .saju-orbit span {
+          max-width: 120px;
+          text-align: center;
+          font-family: var(--font-display);
+          color: #f5c451;
+          animation: saju-counter-spin 5.2s linear infinite;
+        }
+
+        .skeleton-pulse {
+          animation: skeleton-pulse 1.3s ease-in-out infinite;
+        }
+
+        .skeleton-rise {
+          animation: skeleton-rise 1.6s ease-in-out infinite;
+        }
+
+        .element-fill {
+          width: 100%;
+          transform-origin: left;
+          animation: element-fill 1.5s ease both infinite alternate;
+        }
+
+        @keyframes saju-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes saju-counter-spin {
+          to {
+            transform: rotate(-360deg);
+          }
+        }
+
+        @keyframes skeleton-pulse {
+          0%,
+          100% {
+            opacity: 0.34;
+          }
+          50% {
+            opacity: 0.82;
+          }
+        }
+
+        @keyframes skeleton-rise {
+          0%,
+          100% {
+            opacity: 0.25;
+            transform: translateY(6px) scaleY(0.82);
+          }
+          50% {
+            opacity: 0.72;
+            transform: translateY(0) scaleY(1);
+          }
+        }
+
+        @keyframes element-fill {
+          from {
+            transform: scaleX(0.18);
+          }
+          to {
+            transform: scaleX(0.92);
+          }
+        }
+      `}</style>
+    </section>
   )
 }
 

@@ -299,11 +299,14 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
           </button>
           <button
             onClick={tryAgain}
+            disabled={loading}
             className="rounded-full border border-white/18 px-7 py-3 font-semibold text-white transition hover:border-pink-300 hover:text-pink-200"
           >
             {copy.tryAgain}
           </button>
         </div>
+
+        {loading && !reading ? <LoveReadingLoader label={copy.loading} cards={cards.map((card) => card.name)} /> : null}
 
         {reading ? (
           <section className="reading-result mt-16">
@@ -385,6 +388,87 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
           animation: result-fade 0.8s ease both;
         }
 
+        :global(.love-loader) {
+          position: relative;
+          margin: 3.5rem auto 0;
+          max-width: 760px;
+          overflow: hidden;
+          border-top: 1px solid rgba(244, 114, 182, 0.28);
+          border-bottom: 1px solid rgba(244, 114, 182, 0.18);
+          padding: 2rem 1rem;
+          text-align: center;
+          animation: result-fade 0.7s ease both;
+        }
+
+        :global(.love-loader-orbit) {
+          position: relative;
+          margin: 0 auto 1.25rem;
+          width: 116px;
+          height: 116px;
+          border-radius: 999px;
+          border: 1px solid rgba(244, 114, 182, 0.34);
+          box-shadow:
+            0 0 42px rgba(236, 72, 153, 0.34),
+            inset 0 0 28px rgba(245, 158, 11, 0.16);
+          animation: love-pulse 1.8s ease-in-out infinite;
+        }
+
+        :global(.love-loader-orbit::before),
+        :global(.love-loader-orbit::after) {
+          content: '';
+          position: absolute;
+          inset: 16px;
+          border-radius: inherit;
+          border: 1px dashed rgba(245, 196, 81, 0.5);
+          animation: love-spin 5.5s linear infinite;
+        }
+
+        :global(.love-loader-orbit::after) {
+          inset: 34px;
+          border-color: rgba(244, 114, 182, 0.62);
+          animation-duration: 3.5s;
+          animation-direction: reverse;
+        }
+
+        :global(.love-loader-heart) {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          color: #f9a8d4;
+          font-size: 2rem;
+          text-shadow: 0 0 20px rgba(244, 114, 182, 0.8);
+          animation: love-heart 1.35s ease-in-out infinite;
+        }
+
+        :global(.love-loader-title) {
+          font-family: var(--font-display);
+          font-size: 2rem;
+          color: #fff;
+        }
+
+        :global(.love-loader-text) {
+          margin-top: 0.75rem;
+          color: rgba(226, 232, 240, 0.72);
+          line-height: 1.8;
+        }
+
+        :global(.love-loader-cards) {
+          margin-top: 1.25rem;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        :global(.love-loader-cards span) {
+          border-radius: 999px;
+          border: 1px solid rgba(244, 114, 182, 0.26);
+          padding: 0.45rem 0.8rem;
+          color: rgba(253, 242, 248, 0.78);
+          background: rgba(255, 255, 255, 0.045);
+        }
+
         @keyframes heart-float {
           0% {
             transform: translateY(0) scale(0.7) rotate(0deg);
@@ -409,8 +493,56 @@ export default function LovePage({ params }: { params: { lang: LanguageCode } })
             transform: translateY(0);
           }
         }
+
+        @keyframes love-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes love-pulse {
+          0%,
+          100% {
+            transform: scale(0.96);
+            opacity: 0.78;
+          }
+          50% {
+            transform: scale(1.04);
+            opacity: 1;
+          }
+        }
+
+        @keyframes love-heart {
+          0%,
+          100% {
+            transform: translate(-50%, -50%) scale(0.92);
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1.12);
+          }
+        }
       `}</style>
     </main>
+  )
+}
+
+function LoveReadingLoader({ label, cards }: { label: string; cards: string[] }) {
+  return (
+    <div className="love-loader" aria-live="polite">
+      <div className="love-loader-orbit" aria-hidden>
+        <span className="love-loader-heart">{'\u2665'}</span>
+      </div>
+      <h2 className="love-loader-title">{label}</h2>
+      <p className="love-loader-text">
+        The cards are settling into their pattern while the reading gathers the current situation, the hidden feeling,
+        and the next movement of love.
+      </p>
+      <div className="love-loader-cards">
+        {cards.map((card) => (
+          <span key={card}>{card}</span>
+        ))}
+      </div>
+    </div>
   )
 }
 
