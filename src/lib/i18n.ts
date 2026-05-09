@@ -1,0 +1,132 @@
+import type { LanguageCode, ZodiacSign } from '@/types'
+
+export const languages: Record<LanguageCode, { name: string; flag: string; dir: 'ltr' }> = {
+  en: { name: 'English', flag: '🇺🇸', dir: 'ltr' },
+  es: { name: 'Español', flag: '🇪🇸', dir: 'ltr' },
+  ja: { name: '日本語', flag: '🇯🇵', dir: 'ltr' },
+  'zh-TW': { name: '繁體中文', flag: '🇹🇼', dir: 'ltr' },
+}
+
+export const languageCodes = Object.keys(languages) as LanguageCode[]
+
+export const dictionary: Record<LanguageCode, Record<string, string>> = {
+  en: {
+    tagline: 'Korean Mysticism, Your Daily Fortune',
+    daily: 'Your Daily Korean Fortune',
+    intro: 'Tarot, zodiac guidance, and lucky signals refreshed for today.',
+    tarot: 'Tarot',
+    horoscope: 'Horoscope',
+    compatibility: 'Compatibility',
+    readFull: 'Read Full Reading',
+    exploreSigns: 'Explore Signs',
+    todayTarot: "Today's Tarot",
+    zodiac: 'Zodiac Wheel',
+    lucky: "Today's Lucky Signals",
+    newsletter: 'Receive the next reading',
+    subscribe: 'Subscribe',
+  },
+  es: {
+    tagline: 'Misticismo coreano, tu fortuna diaria',
+    daily: 'Tu fortuna coreana diaria',
+    intro: 'Tarot, guía zodiacal y señales de suerte renovadas para hoy.',
+    tarot: 'Tarot',
+    horoscope: 'Horóscopo',
+    compatibility: 'Compatibilidad',
+    readFull: 'Leer lectura completa',
+    exploreSigns: 'Explorar signos',
+    todayTarot: 'Tarot de hoy',
+    zodiac: 'Rueda zodiacal',
+    lucky: 'Señales de suerte',
+    newsletter: 'Recibe la próxima lectura',
+    subscribe: 'Suscribirse',
+  },
+  ja: {
+    tagline: '韓国神秘主義、今日の運勢',
+    daily: '今日の韓国フォーチュン',
+    intro: 'タロット、星座、幸運のサインを毎日更新します。',
+    tarot: 'タロット',
+    horoscope: '星占い',
+    compatibility: '相性',
+    readFull: '詳しく読む',
+    exploreSigns: '星座を見る',
+    todayTarot: '今日のタロット',
+    zodiac: '十二星座',
+    lucky: '今日のラッキー',
+    newsletter: '次のリーディングを受け取る',
+    subscribe: '登録',
+  },
+  'zh-TW': {
+    tagline: '韓式神秘學，每日指引',
+    daily: '今日韓式運勢',
+    intro: '每日更新塔羅、星座與幸運訊號。',
+    tarot: '塔羅',
+    horoscope: '星座',
+    compatibility: '速配',
+    readFull: '閱讀完整解讀',
+    exploreSigns: '探索星座',
+    todayTarot: '今日塔羅',
+    zodiac: '星座輪盤',
+    lucky: '今日幸運訊號',
+    newsletter: '接收下一次解讀',
+    subscribe: '訂閱',
+  },
+}
+
+export const zodiacSigns: ZodiacSign[] = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces',
+]
+
+export const zodiacSymbols: Record<ZodiacSign, string> = {
+  aries: '♈',
+  taurus: '♉',
+  gemini: '♊',
+  cancer: '♋',
+  leo: '♌',
+  virgo: '♍',
+  libra: '♎',
+  scorpio: '♏',
+  sagittarius: '♐',
+  capricorn: '♑',
+  aquarius: '♒',
+  pisces: '♓',
+}
+
+export const tarotCards = [
+  { number: 0, name: 'The Fool' },
+  { number: 1, name: 'The Magician' },
+  { number: 2, name: 'The High Priestess' },
+  { number: 3, name: 'The Empress' },
+  { number: 4, name: 'The Emperor' },
+  { number: 5, name: 'The Hierophant' },
+  { number: 6, name: 'The Lovers' },
+  { number: 7, name: 'The Chariot' },
+  { number: 8, name: 'Strength' },
+  { number: 9, name: 'The Hermit' },
+  { number: 10, name: 'Wheel of Fortune' },
+  { number: 11, name: 'Justice' },
+  { number: 12, name: 'The Hanged Man' },
+  { number: 13, name: 'Death' },
+  { number: 14, name: 'Temperance' },
+  { number: 15, name: 'The Devil' },
+  { number: 16, name: 'The Tower' },
+  { number: 17, name: 'The Star' },
+  { number: 18, name: 'The Moon' },
+  { number: 19, name: 'The Sun' },
+  { number: 20, name: 'Judgement' },
+  { number: 21, name: 'The World' },
+] as const
+
+export function isLanguage(value: string): value is LanguageCode {
+  return languageCodes.includes(value as LanguageCode)
+}

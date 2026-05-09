@@ -1,0 +1,41 @@
+export const tarotImages: Record<number, string> = {
+  0: 'https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg',
+  1: 'https://upload.wikimedia.org/wikipedia/commons/1/10/RWS_Tarot_01_Magician.jpg',
+  2: 'https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg',
+  3: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/RWS_Tarot_03_Empress.jpg',
+  4: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg',
+  5: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg',
+  6: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/RWS_Tarot_06_Lovers.jpg',
+  7: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg',
+  8: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg',
+  9: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg',
+  10: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg',
+  11: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg',
+  12: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg',
+  13: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/RWS_Tarot_13_Death.jpg',
+  14: 'https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg',
+  15: 'https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg',
+  16: 'https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg',
+  17: 'https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg',
+  18: 'https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg',
+  19: 'https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg',
+  20: 'https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg',
+  21: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg',
+}
+
+export const zodiacBg: Record<string, string> = {
+  aries: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=800',
+  taurus: 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=800',
+  gemini: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=800',
+  cancer: 'https://images.unsplash.com/photo-1444080748397-f442aa081c6e?w=800',
+  leo: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800',
+  virgo: 'https://images.unsplash.com/photo-1506443432602-ac2fcd6f54e0?w=800',
+  libra: 'https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=800',
+  scorpio: 'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=800',
+  sagittarius: 'https://images.unsplash.com/photo-1520034475321-cbe63696469a?w=800',
+  capricorn: 'https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?w=800',
+  aquarius: 'https://images.unsplash.com/photo-1502481851512-e9e2529bfbf9?w=800',
+  pisces: 'https://images.unsplash.com/photo-1507832321772-e86cc0452e9c?w=800',
+}
+
+export const heroBg = 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1920'
