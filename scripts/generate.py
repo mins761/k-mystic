@@ -199,7 +199,7 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
     }
 
 
-def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
+def call_openrouter(prompt: str, keys: list[str], max_tokens: int = 1600) -> dict[str, Any]:
     errors: list[str] = []
     models = openrouter_models()
     attempts: list[tuple[str, str]] = [
@@ -224,7 +224,7 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
                     {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.9,
-                "max_tokens": 2000,
+                "max_tokens": max_tokens,
             }
             response = requests.post(
                 OPENROUTER_URL,
@@ -379,7 +379,7 @@ def generate_tarot(client: Client, keys: list[str], lang: str, today: str) -> No
         return
 
     card = random.choice(TAROT_CARDS)
-    raw = call_openrouter(tarot_prompt(card["name"], LANGUAGE_NAMES[lang]), keys)
+    raw = call_openrouter(tarot_prompt(card["name"], LANGUAGE_NAMES[lang]), keys, max_tokens=2000)
     fortune = normalize_fortune(raw, f"{card['name']} Tarot Reading")
 
     insert_fortune(
@@ -402,7 +402,7 @@ def generate_horoscope(client: Client, keys: list[str], lang: str, sign: str, to
         print(f"Skipping existing horoscope for {lang}/{sign} on {today}")
         return
 
-    raw = call_openrouter(horoscope_prompt(sign, LANGUAGE_NAMES[lang], today), keys)
+    raw = call_openrouter(horoscope_prompt(sign, LANGUAGE_NAMES[lang], today), keys, max_tokens=1200)
     fortune = normalize_fortune(raw, f"{sign.title()} Daily Horoscope")
 
     insert_fortune(
@@ -427,10 +427,27 @@ def main() -> None:
 
     print(f"Generating K-Mystic fortunes for {today}")
     print(f"OpenRouter models: {', '.join(openrouter_models())}")
+    failures: list[str] = []
     for lang in LANGUAGES:
-        generate_tarot(client, keys, lang, today)
+        try:
+            generate_tarot(client, keys, lang, today)
+        except Exception as exc:  # noqa: BLE001 - keep the daily job moving.
+            message = f"tarot/{lang}: {exc}"
+            failures.append(message)
+            print(f"FAILED {message}", flush=True)
+
         for sign in ZODIAC_SIGNS:
-            generate_horoscope(client, keys, lang, sign, today)
+            try:
+                generate_horoscope(client, keys, lang, sign, today)
+            except Exception as exc:  # noqa: BLE001 - one bad free-model response should not kill the run.
+                message = f"horoscope/{lang}/{sign}: {exc}"
+                failures.append(message)
+                print(f"FAILED {message}", flush=True)
+
+    if failures:
+        print("Generation finished with skipped items:", flush=True)
+        for failure in failures:
+            print(f"- {failure}", flush=True)
 
 
 if __name__ == "__main__":
