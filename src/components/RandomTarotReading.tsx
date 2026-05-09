@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
@@ -131,7 +132,7 @@ export default function RandomTarotReading({
               </Link>
             ) : null}
           </div>
-          <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="daily-arc mx-auto flex min-h-[300px] w-full max-w-[680px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">
             {spread.map((cardNumber, index) => {
               const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
               const isSelected = selectedCard === cardNumber
@@ -145,6 +146,7 @@ export default function RandomTarotReading({
                   selected={isSelected}
                   disabled={selectedCard !== null}
                   index={index}
+                  total={spread.length}
                   onChoose={() => chooseCard(cardNumber)}
                 />
               )
@@ -269,6 +271,7 @@ function ChoiceTarotCard({
   selected,
   disabled,
   index,
+  total,
   onChoose,
 }: {
   cardNumber: number
@@ -277,8 +280,19 @@ function ChoiceTarotCard({
   selected: boolean
   disabled: boolean
   index: number
+  total: number
   onChoose: () => void
 }) {
+  const center = (total - 1) / 2
+  const offset = index - center
+  const arcStyle = {
+    '--arc-x': `${offset * -16}px`,
+    '--arc-y': `${Math.abs(offset) * 24}px`,
+    '--arc-rotate': `${offset * 8}deg`,
+    '--arc-z': selected ? 10 : 10 - Math.abs(offset),
+    animationDelay: `${index * 0.08}s`,
+  } as CSSProperties
+
   return (
     <button
       type="button"
@@ -286,23 +300,19 @@ function ChoiceTarotCard({
       disabled={disabled}
       aria-pressed={selected}
       aria-label={`Choose ${name}`}
-      className={`group w-[118px] bg-transparent p-0 text-center [perspective:1000px] sm:w-[132px] ${
-        disabled ? 'cursor-default' : 'cursor-pointer'
-      }`}
+      className={`daily-arc-card group bg-transparent p-0 text-center ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+      style={arcStyle}
     >
-      <span
-        className="relative block aspect-[10/17] w-full animate-[choice-rise_0.55s_ease_both]"
-        style={{ animationDelay: `${index * 0.08}s` }}
-      >
+      <span className="relative block aspect-[10/17] w-full animate-[choice-rise_0.55s_ease_both]">
         <span
-          className={`absolute inset-0 rounded-xl transition duration-500 [transform-style:preserve-3d] ${
-            revealed ? '[transform:rotateY(180deg)]' : ''
-          } ${selected ? 'drop-shadow-[0_0_32px_rgba(245,196,81,0.95)]' : 'group-hover:-translate-y-2'}`}
+          className={`choice-card absolute inset-0 rounded-xl ${revealed ? 'is-revealed' : ''} ${
+            selected ? 'is-selected' : ''
+          }`}
         >
-          <span className="absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark [backface-visibility:hidden]">
+          <span className="choice-face choice-back absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark">
             <Image src={tarotBacks.gold} alt="" fill sizes="132px" className="object-cover" draggable={false} />
           </span>
-          <span className="absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <span className="choice-face choice-front absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark">
             <Image
               src={tarotCardImage(cardNumber, name)}
               alt={name}
@@ -319,6 +329,46 @@ function ChoiceTarotCard({
       </span>
       <span className="mt-3 block min-h-10 text-sm text-mystic-light/72">{revealed ? name : 'Choose'}</span>
       <style jsx>{`
+        .daily-arc-card {
+          position: relative;
+          z-index: var(--arc-z);
+          width: 118px;
+          margin-inline: -8px;
+          perspective: 1000px;
+          transform: translate(var(--arc-x), var(--arc-y)) rotate(var(--arc-rotate));
+          transform-origin: 50% 120%;
+          transition:
+            transform 0.35s ease,
+            filter 0.35s ease;
+        }
+
+        .daily-arc-card:hover:not(:disabled) {
+          transform: translate(var(--arc-x), calc(var(--arc-y) - 14px)) rotate(var(--arc-rotate));
+          filter: drop-shadow(0 0 22px rgba(245, 196, 81, 0.55));
+        }
+
+        .choice-card {
+          transform-style: preserve-3d;
+          transition: transform 0.72s cubic-bezier(0.2, 0.72, 0.18, 1);
+        }
+
+        .choice-card.is-revealed {
+          transform: rotateY(180deg);
+        }
+
+        .choice-card.is-selected {
+          filter: drop-shadow(0 0 32px rgba(245, 196, 81, 0.95));
+        }
+
+        .choice-face {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        .choice-front {
+          transform: rotateY(180deg);
+        }
+
         @keyframes choice-rise {
           from {
             opacity: 0;
@@ -327,6 +377,22 @@ function ChoiceTarotCard({
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        @media (min-width: 640px) {
+          .daily-arc-card {
+            width: 132px;
+            margin-inline: -10px;
+          }
+        }
+
+        @media (max-width: 639px) {
+          .daily-arc-card {
+            --arc-x: 0px !important;
+            --arc-y: 0px !important;
+            --arc-rotate: 0deg !important;
+            margin: 0;
           }
         }
       `}</style>
