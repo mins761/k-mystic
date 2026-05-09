@@ -89,10 +89,29 @@ CREATE TABLE IF NOT EXISTS compatibility_readings (
   UNIQUE(sign_a, sign_b, lang)
 );
 
+CREATE TABLE IF NOT EXISTS site_visits (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  path TEXT,
+  lang TEXT CHECK (lang IS NULL OR lang IN ('en', 'es', 'ja', 'zh-TW')),
+  referrer TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_created_at
+ON site_visits(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_path
+ON site_visits(path);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_lang
+ON site_visits(lang);
+
 ALTER TABLE fortunes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscribers_mystic ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saju_readings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE compatibility_readings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_visits ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public read fortunes" ON fortunes;
 CREATE POLICY "Public read fortunes"
@@ -118,5 +137,11 @@ USING (true);
 DROP POLICY IF EXISTS "Service role manage compatibility readings" ON compatibility_readings;
 CREATE POLICY "Service role manage compatibility readings"
 ON compatibility_readings FOR ALL TO service_role
+USING (true)
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role manage site visits" ON site_visits;
+CREATE POLICY "Service role manage site visits"
+ON site_visits FOR ALL TO service_role
 USING (true)
 WITH CHECK (true);

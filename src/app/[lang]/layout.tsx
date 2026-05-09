@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
+import VisitTracker from '@/components/VisitTracker'
 import { isLanguage, languages } from '@/lib/i18n'
 import type { LanguageCode } from '@/types'
 
@@ -18,6 +19,7 @@ export default function LangLayout({
   return (
     <div className="min-h-screen bg-mystic-dark text-mystic-light">
       <Header lang={lang} />
+      <VisitTracker lang={lang} />
       {children}
       <Footer lang={lang} />
     </div>
