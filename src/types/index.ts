@@ -14,6 +14,9 @@ export type Fortune = {
   lucky_number?: number | null
   lucky_color?: string | null
   compatibility?: string | null
+  affirmation?: string | null
+  mantra?: string | null
+  best_time?: string | null
   fortune_date?: string
   created_at?: string
 }

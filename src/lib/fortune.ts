@@ -40,6 +40,9 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
     lucky_number: (new Date().getDate() % 9) + 1,
     lucky_color: 'gold',
     compatibility: 'leo',
+    affirmation: 'I trust the sign that arrives softly and choose the path with courage.',
+    mantra: null,
+    best_time: null,
     fortune_date: today,
   }
 }
@@ -71,6 +74,9 @@ export async function getHoroscope(lang: LanguageCode, sign: ZodiacSign): Promis
     lucky_number: ((index + new Date().getDate()) % 9) + 1,
     lucky_color: ['purple', 'gold', 'silver', 'rose'][index % 4],
     compatibility: zodiacSigns[(index + 4) % zodiacSigns.length],
+    affirmation: 'I move with patience, clarity, and a heart open to the day.',
+    mantra: 'I choose the hour that strengthens my spirit.',
+    best_time: ['morning', 'afternoon', 'evening'][index % 3],
     fortune_date: today,
   }
 }

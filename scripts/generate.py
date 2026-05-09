@@ -162,6 +162,9 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
     title = str(raw.get("title") or fallback_title).strip()
     body = str(raw.get("body") or "").strip()
     lucky_color = str(raw.get("lucky_color") or "purple").strip().lower()
+    affirmation = str(raw.get("affirmation") or "").strip()
+    mantra = str(raw.get("mantra") or "").strip()
+    best_time = str(raw.get("best_time") or "").strip()
 
     if not body:
         raise ValueError("Model response did not include a fortune body")
@@ -172,6 +175,9 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
         "lucky_number": max(1, min(9, lucky_number)),
         "lucky_color": lucky_color[:80],
         "compatibility": compatibility,
+        "affirmation": affirmation[:500] if affirmation else None,
+        "mantra": mantra[:500] if mantra else None,
+        "best_time": best_time[:120] if best_time else None,
     }
 
 
@@ -219,43 +225,75 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
 
 def tarot_prompt(card_name: str, language_name: str) -> str:
     return f"""
-Generate a mystical tarot reading for "{card_name}" card in {language_name}.
+You are a professional mystical tarot reader with 20 years of experience.
+Generate a detailed, insightful tarot reading for "{card_name}" card in {language_name}.
 
-Write in a mystical, enchanting style.
-Include:
-- Overall message (2-3 sentences)
-- Love & relationships insight
-- Career & finance insight
-- Lucky number (1-9)
-- Lucky color
-- Compatible zodiac sign
+The reading must feel personal, mystical, and deeply meaningful.
+Do NOT be vague or generic. Be specific and evocative.
+
+Include ALL of these sections:
+1. Overall Energy (3-4 sentences) - the card's core message today
+2. Love & Relationships (3-4 sentences) - specific romantic/relationship guidance
+3. Career & Finance (3-4 sentences) - practical work and money advice
+4. Spiritual Growth (2-3 sentences) - inner wisdom and personal development
+5. Warning & Advice (2-3 sentences) - what to avoid, what to embrace
+6. Affirmation - one powerful positive statement
+
+Lucky number, lucky color, compatible zodiac.
+
+Writing style:
+- Mystical but accessible
+- Warm and encouraging
+- Use metaphors and imagery
+- Feel like a real tarot reader speaking directly to the reader
 
 Return JSON only:
 {{
-  "title": "...",
-  "body": "... (150-200 words)",
+  "title": "Today's {card_name} Reading: [evocative subtitle]",
+  "body": "... (300-400 words, rich and detailed)",
   "lucky_number": 7,
-  "lucky_color": "purple",
-  "compatibility": "leo"
+  "lucky_color": "deep purple",
+  "compatibility": "scorpio",
+  "affirmation": "..."
 }}
 """.strip()
 
 
-def horoscope_prompt(sign: str, language_name: str) -> str:
+def horoscope_prompt(sign: str, language_name: str, today: str) -> str:
     return f"""
-Generate today's horoscope for {sign} in {language_name}.
+You are a master astrologer with deep knowledge of Korean mysticism and Western astrology.
+Generate today's detailed horoscope for {sign} in {language_name}.
 
-Write in mystical, encouraging style.
-Include love, career, money, health insights.
-Lucky number and color.
+Date: {today}
+Make it feel timely, relevant, and deeply personal.
+
+Include ALL sections:
+1. Today's Overall Energy (3-4 sentences)
+2. 💕 Love & Relationships (3-4 sentences)
+3. 💼 Career & Ambition (3-4 sentences)
+4. 💰 Money & Abundance (3-4 sentences)
+5. 🏥 Health & Vitality (2-3 sentences)
+6. 🌟 Spiritual Insight (2-3 sentences)
+7. Today's Mantra - one powerful sentence
+8. Best time of day for important decisions
+9. Lucky number, lucky color, compatible sign
+
+Writing style:
+- Authoritative yet compassionate
+- Specific and actionable advice
+- Rich with astrological imagery
+- Korean mystical elements (한국 신비주의 느낌)
+- Speak directly to the reader as "you"
 
 Return JSON only:
 {{
-  "title": "...",
-  "body": "... (150-200 words)",
+  "title": "{sign.capitalize()} Horoscope: [evocative subtitle]",
+  "body": "... (350-450 words, detailed and rich)",
   "lucky_number": 3,
-  "lucky_color": "gold",
-  "compatibility": "scorpio"
+  "lucky_color": "emerald green",
+  "compatibility": "virgo",
+  "best_time": "afternoon",
+  "mantra": "..."
 }}
 """.strip()
 
@@ -312,7 +350,7 @@ def generate_horoscope(client: Client, keys: list[str], lang: str, sign: str, to
         print(f"Skipping existing horoscope for {lang}/{sign} on {today}")
         return
 
-    raw = call_openrouter(horoscope_prompt(sign, LANGUAGE_NAMES[lang]), keys)
+    raw = call_openrouter(horoscope_prompt(sign, LANGUAGE_NAMES[lang], today), keys)
     fortune = normalize_fortune(raw, f"{sign.title()} Daily Horoscope")
 
     insert_fortune(

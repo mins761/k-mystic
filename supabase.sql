@@ -12,9 +12,19 @@ CREATE TABLE IF NOT EXISTS fortunes (
   lucky_number INTEGER CHECK (lucky_number IS NULL OR lucky_number BETWEEN 1 AND 9),
   lucky_color TEXT,
   compatibility TEXT,
+  affirmation TEXT,
+  mantra TEXT,
+  best_time TEXT,
   fortune_date DATE DEFAULT CURRENT_DATE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE fortunes
+ADD COLUMN IF NOT EXISTS affirmation TEXT;
+
+ALTER TABLE fortunes
+ADD COLUMN IF NOT EXISTS mantra TEXT,
+ADD COLUMN IF NOT EXISTS best_time TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_fortunes_date_lang
 ON fortunes(fortune_date, lang, type);
