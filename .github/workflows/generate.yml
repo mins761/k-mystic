@@ -8,6 +8,7 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +22,10 @@ jobs:
       - name: Generate daily fortunes
         run: python scripts/generate.py
         env:
+          PYTHONUNBUFFERED: "1"
+          OPENROUTER_SLEEP_SECONDS: "0.5"
+          OPENROUTER_TIMEOUT_SECONDS: "45"
+          OPENROUTER_ATTEMPTS_PER_MODEL: "2"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

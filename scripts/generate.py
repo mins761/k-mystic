@@ -72,7 +72,9 @@ TAROT_CARDS = [
 ]
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_SLEEP_SECONDS = 15
+API_SLEEP_SECONDS = float(os.getenv("OPENROUTER_SLEEP_SECONDS", "1"))
+OPENROUTER_TIMEOUT_SECONDS = int(os.getenv("OPENROUTER_TIMEOUT_SECONDS", "45"))
+OPENROUTER_ATTEMPTS_PER_MODEL = int(os.getenv("OPENROUTER_ATTEMPTS_PER_MODEL", "2"))
 
 
 def env_required(name: str) -> str:
@@ -200,12 +202,18 @@ def normalize_fortune(raw: dict[str, Any], fallback_title: str) -> dict[str, Any
 def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
     errors: list[str] = []
     models = openrouter_models()
-    attempts: list[tuple[str, str]] = [(model, key) for key in keys for model in models for _ in range(3)]
+    attempts: list[tuple[str, str]] = [
+        (model, key)
+        for key in keys
+        for model in models
+        for _ in range(max(1, OPENROUTER_ATTEMPTS_PER_MODEL))
+    ]
     random.shuffle(attempts)
 
-    for model, api_key in attempts:
+    for attempt_index, (model, api_key) in enumerate(attempts, start=1):
         response: requests.Response | None = None
         try:
+            print(f"OpenRouter attempt {attempt_index}/{len(attempts)} using {model}", flush=True)
             payload = {
                 "model": model,
                 "messages": [
@@ -227,7 +235,7 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
                     "X-Title": os.getenv("OPENROUTER_APP_NAME", "K-Mystic"),
                 },
                 json=payload,
-                timeout=90,
+                timeout=OPENROUTER_TIMEOUT_SECONDS,
             )
             response.raise_for_status()
             data = response.json()
@@ -243,7 +251,8 @@ def call_openrouter(prompt: str, keys: list[str]) -> dict[str, Any]:
                 detail = f" :: {response.text[:240]}"
             errors.append(f"{model}: {exc}{detail}")
         finally:
-            time.sleep(API_SLEEP_SECONDS)
+            if API_SLEEP_SECONDS > 0:
+                time.sleep(API_SLEEP_SECONDS)
 
     raise RuntimeError("OpenRouter generation failed: " + " | ".join(errors))
 
