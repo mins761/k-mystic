@@ -132,6 +132,21 @@ def ollama_models() -> list[str]:
     return models
 
 
+def validate_ollama_key(api_key: str) -> None:
+    response = requests.get(
+        "https://ollama.com/api/tags",
+        headers={"Authorization": f"Bearer {api_key}"},
+        timeout=OLLAMA_TIMEOUT_SECONDS,
+    )
+    if response.status_code == 401:
+        raise RuntimeError(
+            "Ollama returned 401 Unauthorized while validating OLLAMA_API_KEY. "
+            "Create a new Ollama API key, save it as the GitHub Actions secret, "
+            "then start a new workflow run."
+        )
+    response.raise_for_status()
+
+
 def call_api_with_retry(prompt: str, keys: list[str], models: list[str], max_tokens: int) -> dict[str, Any] | None:
     if PROVIDER == "ollama":
         return call_ollama_with_retry(prompt, keys, models, max_tokens)
@@ -536,6 +551,7 @@ def main() -> None:
     if PROVIDER == "ollama":
         keys = ollama_keys()
         models = ollama_models()
+        validate_ollama_key(keys[0])
     else:
         keys = openrouter_keys()
         models = openrouter_models()
