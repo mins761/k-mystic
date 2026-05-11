@@ -28,6 +28,7 @@ from generate import (
 
 PROGRESS_FILE = Path("progress.json")
 FAILED_FILE = Path("failed_items.json")
+PROVIDER = os.getenv("GENERATE_PROVIDER", "openrouter").strip().lower()
 RATE_LIMIT_SECONDS = float(os.getenv("GENERATE_ALL_SLEEP_SECONDS", "8"))
 MAX_RETRIES = int(os.getenv("GENERATE_ALL_MAX_RETRIES", "12"))
 MAX_RATE_LIMIT_RETRIES = int(os.getenv("OPENROUTER_RATE_LIMIT_RETRIES", "36"))
@@ -35,6 +36,8 @@ DEFAULT_RATE_LIMIT_BACKOFF_SECONDS = float(os.getenv("OPENROUTER_RATE_LIMIT_BACK
 DEFAULT_KEY_RATE_LIMIT_BACKOFF_SECONDS = float(
     os.getenv("OPENROUTER_KEY_RATE_LIMIT_BACKOFF_SECONDS", str(DEFAULT_RATE_LIMIT_BACKOFF_SECONDS))
 )
+OLLAMA_URL = os.getenv("OLLAMA_URL", "https://ollama.com/api/chat")
+OLLAMA_TIMEOUT_SECONDS = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", str(OPENROUTER_TIMEOUT_SECONDS)))
 
 _model_index = 0
 _key_index = 0
@@ -65,7 +68,7 @@ def save_failed_items(failed_items: list[dict[str, str]]) -> None:
 def get_next_model(models: list[str]) -> str:
     global _model_index
     if not models:
-        raise RuntimeError("No usable OpenRouter models available")
+        raise RuntimeError("No usable generation models available")
 
     while True:
         with _route_lock:
@@ -78,14 +81,14 @@ def get_next_model(models: list[str]) -> str:
 
             wait_seconds = max(1, min(cooldown - now for cooldown in _model_cooldowns.values() if cooldown > now))
 
-        print(f"All OpenRouter models are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
+        print(f"All generation models are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
         time.sleep(wait_seconds)
 
 
 def get_next_key(keys: list[str]) -> str:
     global _key_index
     if not keys:
-        raise RuntimeError("No OpenRouter API keys available")
+        raise RuntimeError("No generation API keys available")
 
     while True:
         with _route_lock:
@@ -98,7 +101,7 @@ def get_next_key(keys: list[str]) -> str:
 
             wait_seconds = max(1, min(cooldown - now for cooldown in _key_cooldowns.values() if cooldown > now))
 
-        print(f"All OpenRouter API keys are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
+        print(f"All generation API keys are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
         time.sleep(wait_seconds)
 
 
@@ -112,7 +115,106 @@ def retry_after_seconds(response: requests.Response) -> float:
     return DEFAULT_RATE_LIMIT_BACKOFF_SECONDS
 
 
+def ollama_keys() -> list[str]:
+    raw_keys = os.getenv("OLLAMA_API_KEYS") or os.getenv("OLLAMA_API_KEY") or ""
+    keys = [key.strip() for key in raw_keys.split(",") if key.strip()]
+    if not keys:
+        raise RuntimeError("Missing OLLAMA_API_KEY or OLLAMA_API_KEYS")
+    random.shuffle(keys)
+    return keys
+
+
+def ollama_models() -> list[str]:
+    raw_models = os.getenv("OLLAMA_MODELS", "qwen3.5:cloud")
+    models = [model.strip() for model in raw_models.split(",") if model.strip()]
+    if not models:
+        raise RuntimeError("No Ollama models configured")
+    return models
+
+
 def call_api_with_retry(prompt: str, keys: list[str], models: list[str], max_tokens: int) -> dict[str, Any] | None:
+    if PROVIDER == "ollama":
+        return call_ollama_with_retry(prompt, keys, models, max_tokens)
+
+    return call_openrouter_with_retry(prompt, keys, models, max_tokens)
+
+
+def call_ollama_with_retry(prompt: str, keys: list[str], models: list[str], max_tokens: int) -> dict[str, Any] | None:
+    errors: list[str] = []
+    attempt = 0
+    rate_limit_attempt = 0
+
+    while attempt < max(1, MAX_RETRIES) and rate_limit_attempt < max(1, MAX_RATE_LIMIT_RETRIES):
+        model = get_next_model(models)
+        api_key = get_next_key(keys)
+        response: requests.Response | None = None
+
+        try:
+            attempt += 1
+            print(f"Ollama attempt {attempt}/{MAX_RETRIES} using {model}", flush=True)
+            response = requests.post(
+                OLLAMA_URL,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "Return valid JSON only. Do not include markdown fences or commentary.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.88,
+                        "num_predict": max_tokens,
+                    },
+                },
+                timeout=OLLAMA_TIMEOUT_SECONDS,
+            )
+
+            if response.status_code == 429:
+                attempt -= 1
+                rate_limit_attempt += 1
+                backoff = retry_after_seconds(response)
+                key_backoff = max(backoff, DEFAULT_KEY_RATE_LIMIT_BACKOFF_SECONDS)
+                with _route_lock:
+                    _model_cooldowns[model] = time.time() + backoff
+                    _key_cooldowns[api_key] = time.time() + key_backoff
+                errors.append(
+                    f"{model}: 429 rate limited; model cooldown {backoff:.0f}s, key cooldown {key_backoff:.0f}s"
+                )
+                print(
+                    f"429 on {model}; cooling model for {backoff:.0f}s and key for {key_backoff:.0f}s "
+                    f"({rate_limit_attempt}/{MAX_RATE_LIMIT_RETRIES})...",
+                    flush=True,
+                )
+                time.sleep(min(5, backoff))
+                continue
+
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("message", {}).get("content")
+            if not isinstance(content, str) or not content.strip():
+                raise ValueError(f"Empty content from {data.get('model', model)}")
+            return extract_json(content)
+        except Exception as exc:  # noqa: BLE001 - rotate model/key and keep the batch alive.
+            detail = ""
+            if response is not None:
+                detail = f" :: {response.text[:220]}"
+            message = f"{model}: {exc}{detail}"
+            errors.append(message)
+            print(f"Error on {model}: {exc}", flush=True)
+            time.sleep(5)
+
+    print("Ollama generation failed: " + " | ".join(errors), flush=True)
+    return None
+
+
+def call_openrouter_with_retry(prompt: str, keys: list[str], models: list[str], max_tokens: int) -> dict[str, Any] | None:
     errors: list[str] = []
     attempt = 0
     rate_limit_attempt = 0
@@ -425,8 +527,12 @@ def run_task(task: dict[str, Any], keys: list[str], models: list[str]) -> tuple[
 
 def main() -> None:
     started_at = time.time()
-    keys = openrouter_keys()
-    models = openrouter_models()
+    if PROVIDER == "ollama":
+        keys = ollama_keys()
+        models = ollama_models()
+    else:
+        keys = openrouter_keys()
+        models = openrouter_models()
     random.shuffle(models)
 
     progress = load_progress()
@@ -442,7 +548,8 @@ def main() -> None:
     total = tarot_total + compatibility_total
     done = len(completed_set)
 
-    print(f"OpenRouter models: {', '.join(models)}", flush=True)
+    print(f"Generation provider: {PROVIDER}", flush=True)
+    print(f"Generation models: {', '.join(models)}", flush=True)
     print(f"Generating tarot ({tarot_total}) and compatibility ({compatibility_total}) content", flush=True)
     workers = worker_count(len(keys))
     print(f"Parallel workers: {workers}", flush=True)

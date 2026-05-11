@@ -21,6 +21,7 @@ jobs:
         run: python scripts/generate_all.py
         env:
           PYTHONUNBUFFERED: "1"
+          GENERATE_PROVIDER: "ollama"
           GENERATE_ALL_WORKERS: "1"
           GENERATE_ALL_SLEEP_SECONDS: "8"
           GENERATE_ALL_MAX_RETRIES: "12"
@@ -30,6 +31,10 @@ jobs:
           OPENROUTER_TIMEOUT_SECONDS: "45"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          OLLAMA_API_KEYS: ${{ secrets.OLLAMA_API_KEYS }}
+          OLLAMA_MODELS: ${{ vars.OLLAMA_MODELS || 'qwen3.5:cloud' }}
+          OLLAMA_TIMEOUT_SECONDS: "90"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
