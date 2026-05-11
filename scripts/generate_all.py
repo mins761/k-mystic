@@ -129,7 +129,7 @@ def ollama_keys() -> list[str]:
 
 
 def ollama_models() -> list[str]:
-    raw_models = os.getenv("OLLAMA_MODELS", "qwen3.5:cloud")
+    raw_models = os.getenv("OLLAMA_MODELS", "qwen3.5:397b-cloud")
     models = [model.strip() for model in raw_models.split(",") if model.strip()]
     if not models:
         raise RuntimeError("No Ollama models configured")

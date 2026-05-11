@@ -33,7 +33,7 @@ jobs:
           OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
           OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
           OLLAMA_API_KEYS: ${{ secrets.OLLAMA_API_KEYS }}
-          OLLAMA_MODELS: ${{ vars.OLLAMA_MODELS || 'qwen3.5:cloud' }}
+          OLLAMA_MODELS: ${{ vars.OLLAMA_MODELS || 'qwen3.5:397b-cloud' }}
           OLLAMA_TIMEOUT_SECONDS: "90"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
