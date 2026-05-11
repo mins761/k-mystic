@@ -129,7 +129,7 @@ def ollama_keys() -> list[str]:
 
 
 def ollama_models() -> list[str]:
-    raw_models = os.getenv("OLLAMA_MODELS", "deepseek-v4-flash:cloud")
+    raw_models = os.getenv("OLLAMA_MODELS", "gpt-oss:20b")
     models = [model.strip() for model in raw_models.split(",") if model.strip()]
     if not models:
         raise RuntimeError("No Ollama models configured")
@@ -187,6 +187,7 @@ def call_ollama_with_retry(prompt: str, keys: list[str], models: list[str], max_
                         {"role": "user", "content": prompt},
                     ],
                     "stream": False,
+                    "format": "json",
                     "options": {
                         "temperature": 0.88,
                         "num_predict": max_tokens,
