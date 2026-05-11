@@ -46,6 +46,10 @@ _key_cooldowns: dict[str, float] = {}
 _route_lock = threading.Lock()
 
 
+class ProviderAuthError(RuntimeError):
+    pass
+
+
 def load_progress() -> dict[str, list[str]]:
     if PROGRESS_FILE.exists():
         with PROGRESS_FILE.open("r", encoding="utf-8") as file:
@@ -192,7 +196,7 @@ def call_ollama_with_retry(prompt: str, keys: list[str], models: list[str], max_
             )
 
             if response.status_code == 401:
-                raise RuntimeError(
+                raise ProviderAuthError(
                     "Ollama returned 401 Unauthorized. Check that OLLAMA_API_KEY is a valid Ollama API key "
                     "and that the GitHub Actions secret was saved before starting this workflow run."
                 )
@@ -222,6 +226,8 @@ def call_ollama_with_retry(prompt: str, keys: list[str], models: list[str], max_
             if not isinstance(content, str) or not content.strip():
                 raise ValueError(f"Empty content from {data.get('model', model)}")
             return extract_json(content)
+        except ProviderAuthError:
+            raise
         except Exception as exc:  # noqa: BLE001 - rotate model/key and keep the batch alive.
             detail = ""
             if response is not None:
