@@ -176,6 +176,12 @@ def call_ollama_with_retry(prompt: str, keys: list[str], models: list[str], max_
                 timeout=OLLAMA_TIMEOUT_SECONDS,
             )
 
+            if response.status_code == 401:
+                raise RuntimeError(
+                    "Ollama returned 401 Unauthorized. Check that OLLAMA_API_KEY is a valid Ollama API key "
+                    "and that the GitHub Actions secret was saved before starting this workflow run."
+                )
+
             if response.status_code == 429:
                 attempt -= 1
                 rate_limit_attempt += 1
