@@ -45,7 +45,7 @@ export default function RandomTarotReading({
     setSpread(dailyChoice.spread)
     setSelectedCard(dailyChoice.selectedCard)
     if (dailyChoice.selectedCard !== null) {
-      setRevealedCards(dailyChoice.spread)
+      setRevealedCards([dailyChoice.selectedCard])
       loadTarot(dailyChoice.selectedCard)
     }
 
@@ -83,13 +83,6 @@ export default function RandomTarotReading({
     setSelectedCard(cardNumber)
     setTarot(null)
     setRevealedCards([cardNumber])
-
-    const remainingCards = choice.spread.filter((number) => number !== cardNumber)
-    remainingCards.forEach((number, index) => {
-      window.setTimeout(() => {
-        setRevealedCards((current) => (current.includes(number) ? current : [...current, number]))
-      }, 500 + index * 260)
-    })
 
     if (supabase) {
       const { data } = await supabase
@@ -144,7 +137,7 @@ export default function RandomTarotReading({
                   name={card.name}
                   revealed={isRevealed}
                   selected={isSelected}
-                  disabled={selectedCard !== null}
+                  disabled={selectedCard !== null && !isSelected}
                   index={index}
                   total={spread.length}
                   onChoose={() => chooseCard(cardNumber)}
@@ -297,10 +290,12 @@ function ChoiceTarotCard({
     <button
       type="button"
       onClick={onChoose}
-      disabled={disabled}
+      aria-disabled={disabled}
       aria-pressed={selected}
       aria-label={`Choose ${name}`}
-      className={`daily-arc-card group bg-transparent p-0 text-center ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+      className={`daily-arc-card group bg-transparent p-0 text-center ${
+        disabled ? 'cursor-default opacity-80' : 'cursor-pointer'
+      }`}
       style={arcStyle}
     >
       <span className="relative block aspect-[10/17] w-full animate-[choice-rise_0.55s_ease_both]">
@@ -324,7 +319,10 @@ function ChoiceTarotCard({
           </span>
         </span>
         {selected ? (
-          <span className="pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 shadow-[0_0_36px_rgba(245,196,81,0.7)]" />
+          <>
+            <span className="selected-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60" />
+            <span className="selected-glint pointer-events-none absolute inset-0 rounded-xl" />
+          </>
         ) : null}
       </span>
       <span className="mt-3 block min-h-10 text-sm text-mystic-light/72">{revealed ? name : 'Choose'}</span>
@@ -342,22 +340,32 @@ function ChoiceTarotCard({
             filter 0.35s ease;
         }
 
-        .daily-arc-card:hover:not(:disabled) {
+        .daily-arc-card:hover,
+        .daily-arc-card:focus-visible {
           transform: translate(var(--arc-x), calc(var(--arc-y) - 14px)) rotate(var(--arc-rotate));
           filter: drop-shadow(0 0 22px rgba(245, 196, 81, 0.55));
+          outline: none;
         }
 
         .choice-card {
           transform-style: preserve-3d;
+          transform: rotateY(180deg);
           transition: transform 0.72s cubic-bezier(0.2, 0.72, 0.18, 1);
         }
 
         .choice-card.is-revealed {
-          transform: rotateY(180deg);
+          transform: rotateY(0deg);
+        }
+
+        .daily-arc-card:hover .choice-card,
+        .daily-arc-card:focus-visible .choice-card,
+        .choice-card.is-selected {
+          transform: rotateY(0deg);
         }
 
         .choice-card.is-selected {
-          filter: drop-shadow(0 0 32px rgba(245, 196, 81, 0.95));
+          animation: selected-card-glow 1.9s ease-in-out infinite;
+          filter: drop-shadow(0 0 30px rgba(245, 196, 81, 0.9));
         }
 
         .choice-face {
@@ -365,8 +373,33 @@ function ChoiceTarotCard({
           -webkit-backface-visibility: hidden;
         }
 
-        .choice-front {
+        .choice-back {
           transform: rotateY(180deg);
+        }
+
+        .selected-aura {
+          animation: selected-aura-pulse 1.9s ease-in-out infinite;
+          box-shadow:
+            0 0 24px rgba(245, 196, 81, 0.55),
+            0 0 58px rgba(245, 196, 81, 0.36);
+        }
+
+        .selected-glint {
+          overflow: hidden;
+        }
+
+        .selected-glint::after {
+          content: '';
+          position: absolute;
+          inset: -40%;
+          background: linear-gradient(
+            115deg,
+            transparent 38%,
+            rgba(255, 244, 184, 0.72) 48%,
+            transparent 58%
+          );
+          transform: translateX(-70%) rotate(8deg);
+          animation: selected-glint-sweep 2.4s ease-in-out infinite;
         }
 
         @keyframes choice-rise {
@@ -377,6 +410,44 @@ function ChoiceTarotCard({
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        @keyframes selected-card-glow {
+          0%,
+          100% {
+            filter: drop-shadow(0 0 24px rgba(245, 196, 81, 0.74));
+          }
+          50% {
+            filter: drop-shadow(0 0 42px rgba(255, 220, 122, 1));
+          }
+        }
+
+        @keyframes selected-aura-pulse {
+          0%,
+          100% {
+            opacity: 0.72;
+            transform: scale(0.98);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.04);
+          }
+        }
+
+        @keyframes selected-glint-sweep {
+          0%,
+          35% {
+            transform: translateX(-75%) rotate(8deg);
+            opacity: 0;
+          }
+          48% {
+            opacity: 0.75;
+          }
+          70%,
+          100% {
+            transform: translateX(75%) rotate(8deg);
+            opacity: 0;
           }
         }
 
