@@ -1,7 +1,9 @@
 import json
 import os
 import random
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -26,10 +28,19 @@ from generate import (
 
 PROGRESS_FILE = Path("progress.json")
 FAILED_FILE = Path("failed_items.json")
-RATE_LIMIT_SECONDS = float(os.getenv("GENERATE_ALL_SLEEP_SECONDS", "2"))
-MAX_RETRIES = int(os.getenv("GENERATE_ALL_MAX_RETRIES", "4"))
+RATE_LIMIT_SECONDS = float(os.getenv("GENERATE_ALL_SLEEP_SECONDS", "8"))
+MAX_RETRIES = int(os.getenv("GENERATE_ALL_MAX_RETRIES", "12"))
+MAX_RATE_LIMIT_RETRIES = int(os.getenv("OPENROUTER_RATE_LIMIT_RETRIES", "36"))
+DEFAULT_RATE_LIMIT_BACKOFF_SECONDS = float(os.getenv("OPENROUTER_RATE_LIMIT_BACKOFF_SECONDS", "90"))
+DEFAULT_KEY_RATE_LIMIT_BACKOFF_SECONDS = float(
+    os.getenv("OPENROUTER_KEY_RATE_LIMIT_BACKOFF_SECONDS", str(DEFAULT_RATE_LIMIT_BACKOFF_SECONDS))
+)
 
 _model_index = 0
+_key_index = 0
+_model_cooldowns: dict[str, float] = {}
+_key_cooldowns: dict[str, float] = {}
+_route_lock = threading.Lock()
 
 
 def load_progress() -> dict[str, list[str]]:
@@ -55,20 +66,64 @@ def get_next_model(models: list[str]) -> str:
     global _model_index
     if not models:
         raise RuntimeError("No usable OpenRouter models available")
-    model = models[_model_index % len(models)]
-    _model_index += 1
-    return model
+
+    while True:
+        with _route_lock:
+            now = time.time()
+            for _ in range(len(models)):
+                model = models[_model_index % len(models)]
+                _model_index += 1
+                if _model_cooldowns.get(model, 0) <= now:
+                    return model
+
+            wait_seconds = max(1, min(cooldown - now for cooldown in _model_cooldowns.values() if cooldown > now))
+
+        print(f"All OpenRouter models are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
+        time.sleep(wait_seconds)
+
+
+def get_next_key(keys: list[str]) -> str:
+    global _key_index
+    if not keys:
+        raise RuntimeError("No OpenRouter API keys available")
+
+    while True:
+        with _route_lock:
+            now = time.time()
+            for _ in range(len(keys)):
+                key = keys[_key_index % len(keys)]
+                _key_index += 1
+                if _key_cooldowns.get(key, 0) <= now:
+                    return key
+
+            wait_seconds = max(1, min(cooldown - now for cooldown in _key_cooldowns.values() if cooldown > now))
+
+        print(f"All OpenRouter API keys are cooling down; waiting {wait_seconds:.0f}s...", flush=True)
+        time.sleep(wait_seconds)
+
+
+def retry_after_seconds(response: requests.Response) -> float:
+    retry_after = response.headers.get("retry-after")
+    if retry_after:
+        try:
+            return max(1.0, float(retry_after))
+        except ValueError:
+            pass
+    return DEFAULT_RATE_LIMIT_BACKOFF_SECONDS
 
 
 def call_api_with_retry(prompt: str, keys: list[str], models: list[str], max_tokens: int) -> dict[str, Any] | None:
     errors: list[str] = []
+    attempt = 0
+    rate_limit_attempt = 0
 
-    for attempt in range(1, max(1, MAX_RETRIES) + 1):
+    while attempt < max(1, MAX_RETRIES) and rate_limit_attempt < max(1, MAX_RATE_LIMIT_RETRIES):
         model = get_next_model(models)
-        api_key = random.choice(keys)
+        api_key = get_next_key(keys)
         response: requests.Response | None = None
 
         try:
+            attempt += 1
             print(f"OpenRouter attempt {attempt}/{MAX_RETRIES} using {model}", flush=True)
             response = requests.post(
                 OPENROUTER_URL,
@@ -94,8 +149,22 @@ def call_api_with_retry(prompt: str, keys: list[str], models: list[str], max_tok
             )
 
             if response.status_code == 429:
-                print(f"429 on {model}, switching model...", flush=True)
-                time.sleep(10)
+                attempt -= 1
+                rate_limit_attempt += 1
+                backoff = retry_after_seconds(response)
+                key_backoff = max(backoff, DEFAULT_KEY_RATE_LIMIT_BACKOFF_SECONDS)
+                with _route_lock:
+                    _model_cooldowns[model] = time.time() + backoff
+                    _key_cooldowns[api_key] = time.time() + key_backoff
+                errors.append(
+                    f"{model}: 429 rate limited; model cooldown {backoff:.0f}s, key cooldown {key_backoff:.0f}s"
+                )
+                print(
+                    f"429 on {model}; cooling model for {backoff:.0f}s and key for {key_backoff:.0f}s "
+                    f"and switching model ({rate_limit_attempt}/{MAX_RATE_LIMIT_RETRIES})...",
+                    flush=True,
+                )
+                time.sleep(min(5, backoff))
                 continue
 
             response.raise_for_status()
@@ -290,9 +359,72 @@ def print_progress(done: int, total: int) -> None:
     print(f"Progress: {done}/{total} ({percent:.1f}%)", flush=True)
 
 
+def worker_count(key_count: int) -> int:
+    configured = os.getenv("GENERATE_ALL_WORKERS")
+    if configured:
+        return max(1, int(configured))
+    return max(1, min(2, key_count))
+
+
+def build_tasks(completed_set: set[str]) -> list[dict[str, Any]]:
+    tasks: list[dict[str, Any]] = []
+    for card in TAROT_CARDS:
+        for lang in LANGUAGES:
+            key = f"tarot_{card['number']}_{lang}"
+            if key not in completed_set:
+                tasks.append(
+                    {
+                        "key": key,
+                        "type": "tarot",
+                        "label": f"{card['name']} in {lang}",
+                        "card": card,
+                        "lang": lang,
+                    }
+                )
+
+    for sign_a in ZODIAC_SIGNS:
+        for sign_b in ZODIAC_SIGNS:
+            for lang in LANGUAGES:
+                key = f"compatibility_{sign_a}_{sign_b}_{lang}"
+                if key not in completed_set:
+                    tasks.append(
+                        {
+                            "key": key,
+                            "type": "compatibility",
+                            "label": f"{sign_a} + {sign_b} in {lang}",
+                            "sign_a": sign_a,
+                            "sign_b": sign_b,
+                            "lang": lang,
+                        }
+                    )
+    return tasks
+
+
+def run_task(task: dict[str, Any], keys: list[str], models: list[str]) -> tuple[str, str, bool]:
+    client = supabase_client()
+    task_type = str(task["type"])
+
+    if task_type == "tarot":
+        card = task["card"]
+        lang = str(task["lang"])
+        existed = tarot_exists(client, int(card["number"]), lang)
+        if not existed:
+            generate_tarot_item(client, keys, models, card, lang)
+            time.sleep(RATE_LIMIT_SECONDS)
+        return str(task["key"]), task_type, existed
+
+    sign_a = str(task["sign_a"])
+    sign_b = str(task["sign_b"])
+    lang = str(task["lang"])
+    existed = compatibility_exists(client, sign_a, sign_b, lang)
+    if not existed:
+        generate_compatibility_item(client, keys, models, sign_a, sign_b, lang)
+        time.sleep(RATE_LIMIT_SECONDS)
+    return str(task["key"]), task_type, existed
+
+
 def main() -> None:
     started_at = time.time()
-    client = supabase_client()
     keys = openrouter_keys()
     models = openrouter_models()
     random.shuffle(models)
@@ -303,7 +435,7 @@ def main() -> None:
     failed_items: list[dict[str, str]] = []
     success = 0
     failed = 0
-    skipped = 0
+    skipped = len(completed_set)
 
     tarot_total = len(TAROT_CARDS) * len(LANGUAGES)
     compatibility_total = len(ZODIAC_SIGNS) * len(ZODIAC_SIGNS) * len(LANGUAGES)
@@ -312,78 +444,44 @@ def main() -> None:
 
     print(f"OpenRouter models: {', '.join(models)}", flush=True)
     print(f"Generating tarot ({tarot_total}) and compatibility ({compatibility_total}) content", flush=True)
+    workers = worker_count(len(keys))
+    print(f"Parallel workers: {workers}", flush=True)
     print_progress(done, total)
 
-    for card in TAROT_CARDS:
-        for lang in LANGUAGES:
-            key = f"tarot_{card['number']}_{lang}"
-            label = f"{card['name']} in {lang}"
+    tasks = build_tasks(completed_set)
+    if not tasks:
+        print("No remaining items to generate", flush=True)
 
-            if key in completed_set:
-                skipped += 1
-                print(f"Skipping {key} (already done)", flush=True)
-                continue
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_task = {}
+        for task in tasks:
+            print(f"Queueing {task['label']}...", flush=True)
+            future = executor.submit(run_task, task, keys, models)
+            future_to_task[future] = task
 
-            print(f"[{done + 1}/{total}] Generating {label}...", flush=True)
+        for future in as_completed(future_to_task):
+            task = future_to_task[future]
+            key = str(task["key"])
+            task_type = str(task["type"])
             try:
-                existed = tarot_exists(client, int(card["number"]), lang)
+                completed_key, _task_type, existed = future.result()
                 if existed:
                     skipped += 1
                 else:
-                    generate_tarot_item(client, keys, models, card, lang)
                     success += 1
-                    time.sleep(RATE_LIMIT_SECONDS)
 
-                completed.append(key)
-                completed_set.add(key)
+                completed.append(completed_key)
+                completed_set.add(completed_key)
                 done += 1
                 save_progress(completed)
-                print(f"{key} done", flush=True)
+                print(f"{completed_key} done", flush=True)
             except Exception as exc:  # noqa: BLE001 - save failure and continue.
                 failed += 1
-                failed_items.append({"key": key, "type": "tarot", "error": str(exc)})
+                failed_items.append({"key": key, "type": task_type, "error": str(exc)})
                 save_failed_items(failed_items)
                 print(f"{key} failed: {exc}", flush=True)
-                time.sleep(5)
-                continue
 
             print_progress(done, total)
-
-    for sign_a in ZODIAC_SIGNS:
-        for sign_b in ZODIAC_SIGNS:
-            for lang in LANGUAGES:
-                key = f"compatibility_{sign_a}_{sign_b}_{lang}"
-                label = f"{sign_a} + {sign_b} in {lang}"
-
-                if key in completed_set:
-                    skipped += 1
-                    print(f"Skipping {key} (already done)", flush=True)
-                    continue
-
-                print(f"[{done + 1}/{total}] Generating {label}...", flush=True)
-                try:
-                    existed = compatibility_exists(client, sign_a, sign_b, lang)
-                    if existed:
-                        skipped += 1
-                    else:
-                        generate_compatibility_item(client, keys, models, sign_a, sign_b, lang)
-                        success += 1
-                        time.sleep(RATE_LIMIT_SECONDS)
-
-                    completed.append(key)
-                    completed_set.add(key)
-                    done += 1
-                    save_progress(completed)
-                    print(f"{key} done", flush=True)
-                except Exception as exc:  # noqa: BLE001 - save failure and continue.
-                    failed += 1
-                    failed_items.append({"key": key, "type": "compatibility", "error": str(exc)})
-                    save_failed_items(failed_items)
-                    print(f"{key} failed: {exc}", flush=True)
-                    time.sleep(5)
-                    continue
-
-                print_progress(done, total)
 
     elapsed_minutes = (time.time() - started_at) / 60
     save_failed_items(failed_items)

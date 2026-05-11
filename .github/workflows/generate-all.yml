@@ -8,11 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: pip install requests supabase python-dotenv
@@ -21,8 +22,12 @@ jobs:
         run: python scripts/generate_all.py
         env:
           PYTHONUNBUFFERED: "1"
-          GENERATE_ALL_SLEEP_SECONDS: "2"
-          GENERATE_ALL_MAX_RETRIES: "4"
+          GENERATE_ALL_WORKERS: "1"
+          GENERATE_ALL_SLEEP_SECONDS: "8"
+          GENERATE_ALL_MAX_RETRIES: "12"
+          OPENROUTER_RATE_LIMIT_RETRIES: "36"
+          OPENROUTER_RATE_LIMIT_BACKOFF_SECONDS: "90"
+          OPENROUTER_KEY_RATE_LIMIT_BACKOFF_SECONDS: "90"
           OPENROUTER_TIMEOUT_SECONDS: "45"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
