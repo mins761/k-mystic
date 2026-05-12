@@ -145,3 +145,5 @@ CREATE POLICY "Service role manage site visits"
 ON site_visits FOR ALL TO service_role
 USING (true)
 WITH CHECK (true);
+
+SELECT pg_notify('pgrst', 'reload schema');

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from generate import (
@@ -48,6 +49,32 @@ _route_lock = threading.Lock()
 
 class ProviderAuthError(RuntimeError):
     pass
+
+
+def is_missing_table_error(exc: Exception, table_name: str) -> bool:
+    text = str(exc)
+    return (
+        "PGRST205" in text
+        or "schema cache" in text
+        or (f"'{table_name}'" in text and "Could not find the table" in text)
+    )
+
+
+def ensure_required_schema(client: Client, tasks: list[dict[str, Any]]) -> None:
+    needs_compatibility = any(str(task.get("type")) == "compatibility" for task in tasks)
+    if not needs_compatibility:
+        return
+
+    try:
+        client.table("compatibility_readings").select("id").limit(1).execute()
+    except APIError as exc:
+        if not is_missing_table_error(exc, "compatibility_readings"):
+            raise
+        raise RuntimeError(
+            "Supabase table public.compatibility_readings is missing from PostgREST. "
+            "Run the compatibility_readings section from supabase.sql in the Supabase SQL editor, "
+            "then run SELECT pg_notify('pgrst', 'reload schema'); before resuming generation."
+        ) from exc
 
 
 def load_progress() -> dict[str, list[str]]:
@@ -587,6 +614,8 @@ def main() -> None:
     tasks = build_tasks(completed_set)
     if not tasks:
         print("No remaining items to generate", flush=True)
+
+    ensure_required_schema(supabase_client(), tasks)
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_task = {}
