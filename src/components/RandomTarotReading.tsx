@@ -57,6 +57,7 @@ export default function RandomTarotReading({
           .eq('type', 'tarot')
           .eq('card_number', cardNumber)
           .eq('lang', lang)
+          .is('fortune_date', null)
           .limit(1)
           .maybeSingle()
 
@@ -91,6 +92,7 @@ export default function RandomTarotReading({
         .eq('type', 'tarot')
         .eq('card_number', cardNumber)
         .eq('lang', lang)
+        .is('fortune_date', null)
         .limit(1)
         .maybeSingle()
 

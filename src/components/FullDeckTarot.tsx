@@ -232,6 +232,25 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
 async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
   const fallback = Object.fromEntries(cardNumbers.map((number) => [number, fallbackReading(number, lang)]))
 
+  try {
+    const params = new URLSearchParams({
+      lang,
+      cards: cardNumbers.join(','),
+    })
+    const response = await fetch(`/api/tarot-readings?${params.toString()}`)
+    if (response.ok) {
+      const payload = (await response.json()) as { readings?: Fortune[] }
+      if (payload.readings?.length) {
+        return {
+          ...fallback,
+          ...Object.fromEntries(payload.readings.map((fortune) => [fortune.card_number ?? 0, fortune])),
+        }
+      }
+    }
+  } catch {
+    // Fall back to the browser Supabase client below when the API is unavailable.
+  }
+
   if (!supabase) return fallback
 
   const { data } = await supabase
@@ -239,6 +258,7 @@ async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
     .select('*')
     .eq('type', 'tarot')
     .eq('lang', lang)
+    .is('fortune_date', null)
     .in('card_number', cardNumbers)
 
   if (!data?.length) return fallback
@@ -283,17 +303,20 @@ function SpreadCard({
     <div className="text-center">
       <button
         type="button"
-        onClick={onReveal}
-        disabled={disabled || revealed}
+        onClick={revealed ? undefined : onReveal}
+        disabled={disabled}
         aria-pressed={revealed}
         aria-label={`Reveal ${position}: ${name}`}
-        className="group mx-auto block w-[168px] bg-transparent p-0 [perspective:1000px] disabled:cursor-default"
+        className={`full-spread-card group mx-auto block w-[168px] bg-transparent p-0 [perspective:1000px] disabled:cursor-default ${
+          revealed ? 'is-revealed cursor-default' : ''
+        }`}
       >
         <span
-          className={`relative block aspect-[10/17] rounded-xl transition duration-700 [transform-style:preserve-3d] ${
-            revealed ? '[transform:rotateY(180deg)]' : 'group-hover:-translate-y-2'
+          className={`full-card-frame relative block aspect-[10/17] rounded-xl transition duration-700 [transform-style:preserve-3d] ${
+            revealed ? 'is-revealed [transform:rotateY(180deg)]' : 'group-hover:-translate-y-2'
           }`}
         >
+          <span className="full-card-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 opacity-0" />
           <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
             <Image src={tarotBacks.gold} alt="" fill sizes="168px" className="object-cover" draggable={false} />
           </span>
@@ -306,11 +329,109 @@ function SpreadCard({
               className="object-cover"
               draggable={false}
             />
+            <span className="full-card-glint pointer-events-none absolute inset-0 rounded-xl" />
           </span>
         </span>
       </button>
       <p className="mt-4 text-xs uppercase tracking-[0.2em] text-mystic-gold">{position}</p>
       <p className="mt-2 min-h-7 font-display text-2xl text-white">{revealed ? name : 'Hidden Card'}</p>
+      <style jsx>{`
+        .full-spread-card {
+          transition:
+            filter 0.35s ease,
+            transform 0.35s ease;
+        }
+
+        .full-spread-card:hover,
+        .full-spread-card:focus-visible {
+          filter: drop-shadow(0 0 24px rgba(245, 196, 81, 0.58));
+          outline: none;
+        }
+
+        .full-spread-card:hover .full-card-frame,
+        .full-spread-card:focus-visible .full-card-frame {
+          transform: translateY(-8px);
+        }
+
+        .full-spread-card.is-revealed .full-card-frame,
+        .full-spread-card.is-revealed:hover .full-card-frame,
+        .full-spread-card.is-revealed:focus-visible .full-card-frame {
+          transform: translateY(-4px) rotateY(180deg);
+          animation: full-card-glow 1.9s ease-in-out infinite;
+        }
+
+        .full-spread-card:hover .full-card-aura,
+        .full-spread-card:focus-visible .full-card-aura,
+        .full-spread-card.is-revealed .full-card-aura {
+          opacity: 1;
+          animation: full-card-aura-pulse 1.9s ease-in-out infinite;
+          box-shadow:
+            0 0 24px rgba(245, 196, 81, 0.55),
+            0 0 58px rgba(245, 196, 81, 0.34);
+        }
+
+        .full-card-glint {
+          overflow: hidden;
+        }
+
+        .full-card-glint::after {
+          content: '';
+          position: absolute;
+          inset: -40%;
+          background: linear-gradient(
+            115deg,
+            transparent 38%,
+            rgba(255, 244, 184, 0.72) 48%,
+            transparent 58%
+          );
+          transform: translateX(-78%) rotate(8deg);
+          opacity: 0;
+        }
+
+        .full-spread-card:hover .full-card-glint::after,
+        .full-spread-card:focus-visible .full-card-glint::after,
+        .full-spread-card.is-revealed .full-card-glint::after {
+          animation: full-card-glint-sweep 2.4s ease-in-out infinite;
+        }
+
+        @keyframes full-card-glow {
+          0%,
+          100% {
+            filter: drop-shadow(0 0 24px rgba(245, 196, 81, 0.74));
+          }
+          50% {
+            filter: drop-shadow(0 0 42px rgba(255, 220, 122, 1));
+          }
+        }
+
+        @keyframes full-card-aura-pulse {
+          0%,
+          100% {
+            transform: scale(0.98);
+            opacity: 0.72;
+          }
+          50% {
+            transform: scale(1.04);
+            opacity: 1;
+          }
+        }
+
+        @keyframes full-card-glint-sweep {
+          0%,
+          35% {
+            transform: translateX(-78%) rotate(8deg);
+            opacity: 0;
+          }
+          48% {
+            opacity: 0.75;
+          }
+          70%,
+          100% {
+            transform: translateX(78%) rotate(8deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }
