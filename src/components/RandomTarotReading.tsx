@@ -307,7 +307,7 @@ function ChoiceTarotCard({
           }`}
         >
           <span className="choice-face choice-back absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark">
-            <Image src={tarotBacks.gold} alt="" fill sizes="132px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.moon} alt="" fill sizes="132px" className="object-cover" draggable={false} />
           </span>
           <span className="choice-face choice-front absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark">
             <Image

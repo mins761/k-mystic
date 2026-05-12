@@ -416,6 +416,7 @@
   "backs": {
     "classic": "/images/tarot/backs/classic-back.png",
     "gold": "/images/tarot/backs/gold-back.png",
+    "moon": "/images/tarot/backs/moon-back.png",
     "special": "/images/tarot/backs/gold-back.png"
   }
 }

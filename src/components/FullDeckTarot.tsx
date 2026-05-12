@@ -54,8 +54,23 @@ const spreadOptions: SpreadOption[] = [
   },
 ]
 
-const fallbackBody =
-  'This card asks you to slow down and listen for the message beneath the surface. Notice what repeats, what feels charged, and what opens when you stop forcing an answer. The reading becomes clearer when you let the symbol speak before the mind explains it.'
+const fallbackOpeners = [
+  'arrives like a quiet signal beneath the noise',
+  'marks a threshold where instinct becomes choice',
+  'points to the pattern you have been circling',
+  'asks you to notice what is gaining strength',
+  'opens a narrow but honest path forward',
+  'turns your attention toward the truth behind the mood',
+]
+
+const fallbackActions = [
+  'name the feeling before you act on it',
+  'choose the response that gives you more dignity',
+  'protect your energy while the situation becomes clearer',
+  'let one practical step matter more than a perfect answer',
+  'trust the sign that repeats, then move with restraint',
+  'release the story that keeps pulling you backward',
+]
 
 export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
   const [spreadKey, setSpreadKey] = useState<SpreadKey>('three')
@@ -271,11 +286,14 @@ async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
 
 function fallbackReading(cardNumber: number, lang: LanguageCode): Fortune {
   const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
+  const opener = fallbackOpeners[card.number % fallbackOpeners.length]
+  const action = fallbackActions[(card.number + 2) % fallbackActions.length]
+  const suit = card.name.includes(' of ') ? card.name.split(' of ')[1] : 'Major Arcana'
   return {
     type: 'tarot',
     lang,
     title: `${card.name} Tarot Reading`,
-    body: fallbackBody,
+    body: `${card.name} ${opener}. In the ${suit} current, this card highlights the place where your attention, timing, and desire are no longer moving at the same speed. ${action.charAt(0).toUpperCase() + action.slice(1)}. The message is not to force certainty, but to read the small pressure in the moment and let it show you the next honest direction.`,
     card_name: card.name,
     card_number: card.number,
     lucky_number: (card.number % 9) + 1,
@@ -318,7 +336,7 @@ function SpreadCard({
         >
           <span className="full-card-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 opacity-0" />
           <span className="full-card-face full-card-back absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
-            <Image src={tarotBacks.gold} alt="" fill sizes="168px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.moon} alt="" fill sizes="168px" className="object-cover" draggable={false} />
           </span>
           <span className="full-card-face full-card-front absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold bg-mystic-dark shadow-gold [backface-visibility:hidden]">
             <Image

@@ -84,6 +84,7 @@ const tarotSlugs = fullTarotCards.map((card) => slugCard(card.name))
 export const tarotBacks = {
   classic: '/images/tarot/backs/classic-back.png',
   gold: '/images/tarot/backs/gold-back.png',
+  moon: '/images/tarot/backs/moon-back.png',
 }
 
 export const specialTarotCards = [
