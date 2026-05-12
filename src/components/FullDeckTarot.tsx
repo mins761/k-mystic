@@ -313,14 +313,14 @@ function SpreadCard({
       >
         <span
           className={`full-card-frame relative block aspect-[10/17] rounded-xl transition duration-700 [transform-style:preserve-3d] ${
-            revealed ? 'is-revealed [transform:rotateY(180deg)]' : 'group-hover:-translate-y-2'
+            revealed ? 'is-revealed' : 'group-hover:-translate-y-2'
           }`}
         >
           <span className="full-card-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 opacity-0" />
-          <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
+          <span className="full-card-face full-card-back absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
             <Image src={tarotBacks.gold} alt="" fill sizes="168px" className="object-cover" draggable={false} />
           </span>
-          <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold bg-mystic-dark shadow-gold [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <span className="full-card-face full-card-front absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold bg-mystic-dark shadow-gold [backface-visibility:hidden]">
             <Image
               src={tarotCardImage(cardNumber, name)}
               alt={name}
@@ -356,8 +356,24 @@ function SpreadCard({
         .full-spread-card.is-revealed .full-card-frame,
         .full-spread-card.is-revealed:hover .full-card-frame,
         .full-spread-card.is-revealed:focus-visible .full-card-frame {
-          transform: translateY(-4px) rotateY(180deg);
+          transform: translateY(-4px);
           animation: full-card-glow 1.9s ease-in-out infinite;
+        }
+
+        .full-card-face {
+          transition: transform 0.72s cubic-bezier(0.2, 0.72, 0.18, 1);
+        }
+
+        .full-card-front {
+          transform: rotateY(-180deg);
+        }
+
+        .full-spread-card.is-revealed .full-card-back {
+          transform: rotateY(180deg);
+        }
+
+        .full-spread-card.is-revealed .full-card-front {
+          transform: rotateY(0deg);
         }
 
         .full-spread-card:hover .full-card-aura,
