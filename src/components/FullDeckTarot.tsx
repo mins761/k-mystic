@@ -113,7 +113,7 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
 
     const selected = [...drawnCards, cardNumber]
     setDrawnCards(selected)
-    setRevealedCards([])
+    setRevealedCards(selected)
 
     if (selected.length !== choicesNeeded) return
 
@@ -214,6 +214,8 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
               {choicePool.map((cardNumber, index) => (
                 <PoolCard
                   key={cardNumber}
+                  cardNumber={cardNumber}
+                  name={fullTarotCards[cardNumber]?.name ?? 'Selected Card'}
                   index={index}
                   selectedIndex={drawnCards.indexOf(cardNumber)}
                   disabled={loading}
@@ -422,11 +424,15 @@ function ShuffleStage() {
 }
 
 function PoolCard({
+  cardNumber,
+  name,
   index,
   selectedIndex,
   disabled,
   onChoose,
 }: {
+  cardNumber: number
+  name: string
   index: number
   selectedIndex: number
   disabled: boolean
@@ -440,22 +446,39 @@ function PoolCard({
       onClick={selected ? undefined : onChoose}
       disabled={disabled || selected}
       aria-pressed={selected}
-      aria-label={selected ? `Selected card ${selectedIndex + 1}` : `Choose hidden card ${index + 1}`}
+      aria-label={selected ? `Selected ${name}` : `Choose hidden card ${index + 1}`}
       className={`pool-card group mx-auto w-[112px] bg-transparent p-0 text-center ${
         selected ? 'is-selected cursor-default' : 'cursor-pointer'
       }`}
       style={{ animationDelay: `${index * 45}ms` }}
     >
-      <span className="relative block aspect-[10/17] overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.2)]">
-        <Image src={tarotBacks.moon} alt="" fill sizes="112px" className="object-cover" draggable={false} />
+      <span className="pool-card-frame relative block aspect-[10/17] rounded-xl">
+        <span className="pool-card-face pool-card-back absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.2)]">
+          <Image src={tarotBacks.moon} alt="" fill sizes="112px" className="object-cover" draggable={false} />
+        </span>
+        <span className="pool-card-face pool-card-front absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark shadow-gold">
+          <Image
+            src={tarotCardImage(cardNumber, name)}
+            alt={selected ? name : ''}
+            fill
+            sizes="112px"
+            className="object-cover"
+            draggable={false}
+          />
+        </span>
         {selected ? (
-          <span className="absolute inset-0 grid place-items-center bg-mystic-gold/18 text-3xl font-semibold text-white">
-            {selectedIndex + 1}
-          </span>
+          <span className="pool-selected-aura pointer-events-none absolute -inset-2 rounded-2xl border border-mystic-gold/50" />
         ) : null}
       </span>
       <span className="mt-3 block min-h-6 text-xs uppercase tracking-[0.18em] text-mystic-light/62">
-        {selected ? 'Chosen' : 'Choose'}
+        {selected ? (
+          <span>
+            Chosen
+            <span className="sr-only">: {name}</span>
+          </span>
+        ) : (
+          'Choose'
+        )}
       </span>
       <style jsx>{`
         .pool-card {
@@ -488,20 +511,57 @@ function PoolCard({
         }
 
         .pool-card.is-selected {
-          opacity: 0.64;
-          filter: saturate(0.7);
+          opacity: 1;
+          filter: drop-shadow(0 0 22px rgba(245, 196, 81, 0.5));
         }
 
         .pool-card.is-selected:hover,
         .pool-card.is-selected:focus-visible {
           transform: translateY(0) rotate(var(--pool-rotate));
-          filter: saturate(0.7);
+          filter: drop-shadow(0 0 22px rgba(245, 196, 81, 0.5));
+        }
+
+        .pool-card-frame {
+          transform-style: preserve-3d;
+          transition: transform 0.72s cubic-bezier(0.2, 0.72, 0.18, 1);
+        }
+
+        .pool-card.is-selected .pool-card-frame {
+          transform: rotateY(180deg);
+        }
+
+        .pool-card-face {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        .pool-card-front {
+          transform: rotateY(180deg);
+        }
+
+        .pool-selected-aura {
+          animation: pool-selected-aura 1.9s ease-in-out infinite;
+          box-shadow:
+            0 0 22px rgba(245, 196, 81, 0.45),
+            0 0 48px rgba(245, 196, 81, 0.24);
         }
 
         @keyframes pool-card-in {
           to {
             opacity: 1;
             transform: translateY(0) rotate(var(--pool-rotate));
+          }
+        }
+
+        @keyframes pool-selected-aura {
+          0%,
+          100% {
+            opacity: 0.68;
+            transform: scale(0.98);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.04);
           }
         }
       `}</style>
