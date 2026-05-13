@@ -25,6 +25,33 @@ const fallbackBodies: Record<LanguageCode, string> = {
   'zh-TW': '今天有一道安靜的訊號浮現，提醒你勇敢選擇。相信最先出現的真實感受，讓耐心帶你走向下一步。',
 }
 
+type DayPeriod = 'am' | 'pm'
+
+const periodCopy: Record<
+  DayPeriod,
+  {
+    eyebrow: string
+    emptyTitle: string
+    emptyBody: string
+    titleSuffix: string
+  }
+> = {
+  am: {
+    eyebrow: 'Morning Tarot',
+    emptyTitle: 'Choose one card for this morning',
+    emptyBody:
+      'Three cards are waiting face down. Let your attention settle, choose one, and your morning reading will open from that card.',
+    titleSuffix: 'guides the morning',
+  },
+  pm: {
+    eyebrow: 'Afternoon Tarot',
+    emptyTitle: 'Choose one card for this afternoon',
+    emptyBody:
+      'Three cards are waiting face down. Let your attention settle, choose one, and your afternoon reading will open from that card.',
+    titleSuffix: 'guides the afternoon',
+  },
+}
+
 export default function RandomTarotReading({
   lang,
   todayTarot,
@@ -37,17 +64,13 @@ export default function RandomTarotReading({
   const [spread, setSpread] = useState<number[]>([])
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
   const [revealedCards, setRevealedCards] = useState<number[]>([])
+  const [dayPeriod, setDayPeriod] = useState<DayPeriod | null>(null)
 
   useEffect(() => {
     let active = true
 
-    const dailyChoice = getDailyChoice()
-    setSpread(dailyChoice.spread)
-    setSelectedCard(dailyChoice.selectedCard)
-    if (dailyChoice.selectedCard !== null) {
-      setRevealedCards([dailyChoice.selectedCard])
-      loadTarot(dailyChoice.selectedCard)
-    }
+    syncChoice()
+    const timer = window.setInterval(syncChoice, 60 * 1000)
 
     async function loadTarot(cardNumber: number) {
       if (supabase) {
@@ -70,17 +93,35 @@ export default function RandomTarotReading({
       if (active) setTarot(fallbackTarot(lang, cardNumber))
     }
 
+    function syncChoice() {
+      const period = getDayPeriod()
+      const dailyChoice = getDailyChoice(period)
+
+      setDayPeriod(period)
+      setSpread(dailyChoice.spread)
+      setSelectedCard(dailyChoice.selectedCard)
+      setRevealedCards(dailyChoice.selectedCard !== null ? [dailyChoice.selectedCard] : [])
+      if (dailyChoice.selectedCard !== null) {
+        loadTarot(dailyChoice.selectedCard)
+      } else {
+        setTarot(null)
+      }
+    }
+
     return () => {
       active = false
+      window.clearInterval(timer)
     }
   }, [lang])
 
   async function chooseCard(cardNumber: number) {
     if (selectedCard !== null) return
 
-    const choice = getDailyChoice()
+    const period = dayPeriod ?? getDayPeriod()
+    const choice = getDailyChoice(period)
     const nextChoice = { ...choice, selectedCard: cardNumber }
     saveDailyChoice(nextChoice)
+    setDayPeriod(period)
     setSelectedCard(cardNumber)
     setTarot(null)
     setRevealedCards([cardNumber])
@@ -106,20 +147,24 @@ export default function RandomTarotReading({
   }
 
   const reading = selectedCard !== null ? tarot ?? fallbackTarot(lang, selectedCard) : null
+  const copy = dayPeriod ? periodCopy[dayPeriod] : null
+  const readingTitle =
+    reading && copy ? `${reading.card_name || reading.title} ${copy.titleSuffix}` : reading?.title
 
   return (
     <>
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{todayTarot}</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{copy?.eyebrow ?? todayTarot}</p>
             <h2 className="mt-3 font-display text-5xl text-white">
-              {reading ? reading.title : 'Choose one card for today'}
+              {reading ? readingTitle : copy?.emptyTitle ?? 'Choose one card for today'}
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">
               {reading
                 ? reading.body
-                : 'Five cards are waiting face down. Let your attention settle, choose one, and your daily reading will open from that card.'}
+                : copy?.emptyBody ??
+                  'Three cards are waiting face down. Let your attention settle, choose one, and your daily reading will open from that card.'}
             </p>
             {reading ? (
               <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
@@ -127,7 +172,7 @@ export default function RandomTarotReading({
               </Link>
             ) : null}
           </div>
-          <div className="daily-arc mx-auto flex min-h-[300px] w-full max-w-[680px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">
+          <div className="daily-arc mx-auto flex min-h-[300px] w-full max-w-[520px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">
             {spread.map((cardNumber, index) => {
               const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
               const isSelected = selectedCard === cardNumber
@@ -180,13 +225,14 @@ export default function RandomTarotReading({
 
 type DailyChoice = {
   date: string
+  period: DayPeriod
   spread: number[]
   selectedCard: number | null
 }
 
-function getDailyChoice(): DailyChoice {
+function getDailyChoice(period: DayPeriod): DailyChoice {
   const today = localDateKey()
-  const storageKey = 'k-mystic-daily-tarot'
+  const storageKey = dailyChoiceStorageKey(today, period)
 
   try {
     const stored = window.localStorage.getItem(storageKey)
@@ -195,31 +241,32 @@ function getDailyChoice(): DailyChoice {
       const selectedCard = typeof parsed.selectedCard === 'number' ? parsed.selectedCard : parsed.cardNumber
       if (
         parsed.date === today &&
+        parsed.period === period &&
         Array.isArray(parsed.spread) &&
-        parsed.spread.length === 5 &&
+        parsed.spread.length === 3 &&
         parsed.spread.every(isValidCardNumber) &&
         (selectedCard === null || selectedCard === undefined || isValidCardNumber(selectedCard))
       ) {
-        return { date: today, spread: parsed.spread, selectedCard: selectedCard ?? null }
+        return { date: today, period, spread: parsed.spread, selectedCard: selectedCard ?? null }
       }
     }
   } catch {
     window.localStorage.removeItem(storageKey)
   }
 
-  const choice = { date: today, spread: drawSpread(), selectedCard: null }
+  const choice = { date: today, period, spread: drawSpread(), selectedCard: null }
   saveDailyChoice(choice)
   return choice
 }
 
 function saveDailyChoice(choice: DailyChoice) {
-  window.localStorage.setItem('k-mystic-daily-tarot', JSON.stringify(choice))
+  window.localStorage.setItem(dailyChoiceStorageKey(choice.date, choice.period), JSON.stringify(choice))
 }
 
 function drawSpread() {
   return [...fullTarotCards]
     .sort(() => Math.random() - 0.5)
-    .slice(0, 5)
+    .slice(0, 3)
     .map((card) => card.number)
 }
 
@@ -233,6 +280,14 @@ function localDateKey() {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const day = String(now.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function getDayPeriod(): DayPeriod {
+  return new Date().getHours() < 12 ? 'am' : 'pm'
+}
+
+function dailyChoiceStorageKey(date: string, period: DayPeriod) {
+  return `k-mystic-daily-tarot-v2-${date}-${period}`
 }
 
 function fallbackTarot(lang: LanguageCode, cardNumber: number): Fortune {
@@ -281,10 +336,10 @@ function ChoiceTarotCard({
   const center = (total - 1) / 2
   const offset = index - center
   const arcStyle = {
-    '--arc-x': `${offset * -16}px`,
-    '--arc-y': `${Math.abs(offset) * 24}px`,
-    '--arc-rotate': `${offset * 8}deg`,
-    '--arc-z': selected ? 10 : 10 - Math.abs(offset),
+    '--arc-x': `${offset * -20}px`,
+    '--arc-y': `${Math.abs(offset) * 22}px`,
+    '--arc-rotate': `${offset * 9}deg`,
+    '--arc-z': selected ? 30 : 10 - Math.abs(offset),
     animationDelay: `${index * 0.08}s`,
   } as CSSProperties
 
@@ -307,7 +362,7 @@ function ChoiceTarotCard({
           }`}
         >
           <span className="choice-face choice-back absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark">
-            <Image src={tarotBacks.moon} alt="" fill sizes="132px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.classic} alt="" fill sizes="132px" className="object-cover" draggable={false} />
           </span>
           <span className="choice-face choice-front absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark">
             <Image

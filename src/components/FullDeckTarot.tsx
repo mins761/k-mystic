@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
@@ -74,12 +75,16 @@ const fallbackActions = [
 
 export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
   const [spreadKey, setSpreadKey] = useState<SpreadKey>('three')
+  const [choicePool, setChoicePool] = useState<number[]>([])
   const [drawnCards, setDrawnCards] = useState<number[]>([])
   const [revealedCards, setRevealedCards] = useState<number[]>([])
   const [readings, setReadings] = useState<Record<number, Fortune>>({})
   const [loading, setLoading] = useState(false)
+  const [shuffling, setShuffling] = useState(false)
   const spread = spreadOptions.find((option) => option.key === spreadKey) ?? spreadOptions[1]
   const allRevealed = drawnCards.length > 0 && drawnCards.every((cardNumber) => revealedCards.includes(cardNumber))
+  const choicesNeeded = spread.positions.length
+  const choicesRemaining = Math.max(choicesNeeded - drawnCards.length, 0)
 
   const combinedMessage = useMemo(() => {
     if (!allRevealed) return ''
@@ -88,25 +93,43 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
     return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} form the pattern of this reading. Read them as one path: what begins as energy becomes choice, and choice becomes direction.`
   }, [allRevealed, drawnCards])
 
-  async function drawSpread(nextSpread = spread) {
-    const selected = shuffle(fullTarotCards.map((card) => card.number)).slice(0, nextSpread.positions.length)
-    setDrawnCards(selected)
+  function prepareChoices(nextSpread = spread) {
+    const poolSize = getChoicePoolSize(nextSpread)
+    const selected = shuffle(fullTarotCards.map((card) => card.number)).slice(0, poolSize)
+    setShuffling(true)
+    setChoicePool([])
+    setDrawnCards([])
     setRevealedCards([])
     setReadings({})
-    setLoading(true)
 
+    window.setTimeout(() => {
+      setChoicePool(selected)
+      setShuffling(false)
+    }, 900)
+  }
+
+  async function chooseFromPool(cardNumber: number) {
+    if (loading || shuffling || drawnCards.includes(cardNumber) || drawnCards.length >= choicesNeeded) return
+
+    const selected = [...drawnCards, cardNumber]
+    setDrawnCards(selected)
+    setRevealedCards([])
+
+    if (selected.length !== choicesNeeded) return
+
+    setLoading(true)
     const loaded = await loadReadings(selected, lang)
     setReadings(loaded)
     setLoading(false)
   }
 
   function changeSpread(key: SpreadKey) {
-    const nextSpread = spreadOptions.find((option) => option.key === key) ?? spreadOptions[1]
     setSpreadKey(key)
+    setChoicePool([])
     setDrawnCards([])
     setRevealedCards([])
     setReadings({})
-    void drawSpread(nextSpread)
+    setShuffling(false)
   }
 
   function revealCard(cardNumber: number) {
@@ -135,10 +158,11 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
             </div>
             <button
               type="button"
-              onClick={() => drawSpread()}
+              onClick={() => prepareChoices()}
+              disabled={loading || shuffling}
               className="w-fit rounded-full bg-mystic-gold px-7 py-3 font-semibold text-mystic-dark transition hover:bg-amber-300"
             >
-              Draw Full Deck Reading
+              {shuffling ? 'Shuffling...' : `Shuffle for ${spread.label}`}
             </button>
           </div>
 
@@ -163,7 +187,42 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-12">
-        {drawnCards.length ? (
+        {shuffling ? (
+          <ShuffleStage />
+        ) : choicePool.length && drawnCards.length < choicesNeeded ? (
+          <section>
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.26em] text-mystic-gold">{spread.label} Choice</p>
+                <h2 className="mt-2 font-display text-4xl text-white">
+                  Choose {choicesRemaining} {choicesRemaining === 1 ? 'card' : 'cards'}
+                </h2>
+                <p className="mt-3 max-w-2xl leading-7 text-mystic-light/64">
+                  The cards have been shuffled. Pick the cards that call to you; your selection order becomes the spread.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => prepareChoices()}
+                className="rounded-full border border-white/18 px-5 py-3 font-semibold text-white transition hover:border-mystic-gold hover:text-mystic-gold"
+              >
+                Shuffle Again
+              </button>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-5 lg:grid-cols-10">
+              {choicePool.map((cardNumber, index) => (
+                <PoolCard
+                  key={cardNumber}
+                  index={index}
+                  selectedIndex={drawnCards.indexOf(cardNumber)}
+                  disabled={loading}
+                  onChoose={() => chooseFromPool(cardNumber)}
+                />
+              ))}
+            </div>
+          </section>
+        ) : drawnCards.length ? (
           <>
             <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -302,6 +361,154 @@ function fallbackReading(cardNumber: number, lang: LanguageCode): Fortune {
   }
 }
 
+function getChoicePoolSize(spread: SpreadOption) {
+  if (spread.positions.length === 1) return 5
+  if (spread.positions.length <= 5) return 10
+  return 15
+}
+
+function ShuffleStage() {
+  return (
+    <div className="grid min-h-[360px] place-items-center border-y border-white/10 text-center">
+      <div>
+        <div className="shuffle-deck mx-auto h-[190px] w-[138px]">
+          {Array.from({ length: 7 }).map((_, index) => (
+            <span key={index} style={{ '--shuffle-index': index } as CSSProperties}>
+              <Image src={tarotBacks.classic} alt="" fill sizes="138px" className="object-cover" draggable={false} />
+            </span>
+          ))}
+        </div>
+        <p className="mt-8 font-display text-4xl text-white">Shuffling the deck...</p>
+        <p className="mt-3 text-mystic-light/64">Let the cards settle before you choose.</p>
+      </div>
+      <style jsx>{`
+        .shuffle-deck {
+          position: relative;
+          perspective: 900px;
+        }
+
+        .shuffle-deck span {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          border: 1px solid rgba(245, 196, 81, 0.72);
+          border-radius: 0.75rem;
+          background: #070716;
+          box-shadow: 0 0 30px rgba(245, 196, 81, 0.26);
+          animation: shuffle-card 0.9s cubic-bezier(0.22, 0.68, 0.22, 1) infinite;
+          animation-delay: calc(var(--shuffle-index) * 70ms);
+        }
+
+        @keyframes shuffle-card {
+          0%,
+          100% {
+            transform: translateX(0) rotateZ(0deg) rotateY(0deg);
+            z-index: 7;
+          }
+          35% {
+            transform: translateX(calc((var(--shuffle-index) - 3) * 14px)) rotateZ(calc((var(--shuffle-index) - 3) * 4deg))
+              rotateY(18deg);
+            z-index: var(--shuffle-index);
+          }
+          70% {
+            transform: translateX(calc((3 - var(--shuffle-index)) * 10px)) rotateZ(calc((3 - var(--shuffle-index)) * 3deg))
+              rotateY(-16deg);
+            z-index: calc(7 - var(--shuffle-index));
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function PoolCard({
+  index,
+  selectedIndex,
+  disabled,
+  onChoose,
+}: {
+  index: number
+  selectedIndex: number
+  disabled: boolean
+  onChoose: () => void
+}) {
+  const selected = selectedIndex >= 0
+
+  return (
+    <button
+      type="button"
+      onClick={selected ? undefined : onChoose}
+      disabled={disabled || selected}
+      aria-pressed={selected}
+      aria-label={selected ? `Selected card ${selectedIndex + 1}` : `Choose hidden card ${index + 1}`}
+      className={`pool-card group mx-auto w-[112px] bg-transparent p-0 text-center ${
+        selected ? 'is-selected cursor-default' : 'cursor-pointer'
+      }`}
+      style={{ animationDelay: `${index * 45}ms` }}
+    >
+      <span className="relative block aspect-[10/17] overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.2)]">
+        <Image src={tarotBacks.classic} alt="" fill sizes="112px" className="object-cover" draggable={false} />
+        {selected ? (
+          <span className="absolute inset-0 grid place-items-center bg-mystic-gold/18 text-3xl font-semibold text-white">
+            {selectedIndex + 1}
+          </span>
+        ) : null}
+      </span>
+      <span className="mt-3 block min-h-6 text-xs uppercase tracking-[0.18em] text-mystic-light/62">
+        {selected ? 'Chosen' : 'Choose'}
+      </span>
+      <style jsx>{`
+        .pool-card {
+          opacity: 0;
+          transform: translateY(18px) rotate(var(--pool-rotate, 0deg));
+          animation: pool-card-in 0.48s ease forwards;
+          transition:
+            filter 0.3s ease,
+            transform 0.3s ease,
+            opacity 0.3s ease;
+        }
+
+        .pool-card:nth-child(3n + 1) {
+          --pool-rotate: -2deg;
+        }
+
+        .pool-card:nth-child(3n + 2) {
+          --pool-rotate: 1deg;
+        }
+
+        .pool-card:nth-child(3n) {
+          --pool-rotate: 2deg;
+        }
+
+        .pool-card:hover,
+        .pool-card:focus-visible {
+          filter: drop-shadow(0 0 24px rgba(245, 196, 81, 0.56));
+          transform: translateY(-8px) rotate(var(--pool-rotate));
+          outline: none;
+        }
+
+        .pool-card.is-selected {
+          opacity: 0.64;
+          filter: saturate(0.7);
+        }
+
+        .pool-card.is-selected:hover,
+        .pool-card.is-selected:focus-visible {
+          transform: translateY(0) rotate(var(--pool-rotate));
+          filter: saturate(0.7);
+        }
+
+        @keyframes pool-card-in {
+          to {
+            opacity: 1;
+            transform: translateY(0) rotate(var(--pool-rotate));
+          }
+        }
+      `}</style>
+    </button>
+  )
+}
+
 function SpreadCard({
   cardNumber,
   name,
@@ -324,7 +531,7 @@ function SpreadCard({
         onClick={revealed ? undefined : onReveal}
         disabled={disabled}
         aria-pressed={revealed}
-        aria-label={`Reveal ${position}: ${name}`}
+        aria-label={revealed ? `${position}: ${name}` : `Reveal ${position}`}
         className={`full-spread-card group mx-auto block w-[168px] bg-transparent p-0 [perspective:1000px] disabled:cursor-default ${
           revealed ? 'is-revealed cursor-default' : ''
         }`}
@@ -336,12 +543,12 @@ function SpreadCard({
         >
           <span className="full-card-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 opacity-0" />
           <span className="full-card-face full-card-back absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
-            <Image src={tarotBacks.moon} alt="" fill sizes="168px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.classic} alt="" fill sizes="168px" className="object-cover" draggable={false} />
           </span>
           <span className="full-card-face full-card-front absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold bg-mystic-dark shadow-gold [backface-visibility:hidden]">
             <Image
               src={tarotCardImage(cardNumber, name)}
-              alt={name}
+              alt={revealed ? name : ''}
               fill
               sizes="168px"
               className="object-cover"
