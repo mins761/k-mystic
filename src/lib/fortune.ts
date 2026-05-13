@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { zodiacSigns } from '@/lib/i18n'
 import { fullTarotCards } from '@/lib/tarotAssets'
+import { getTarotCardMeta, getTarotReadingBody } from '@/lib/tarotMeanings'
 import type { Fortune, LanguageCode, ZodiacSign } from '@/types'
 
 const sampleBodies: Record<LanguageCode, string> = {
@@ -40,19 +41,19 @@ export async function getDailyTarot(lang: LanguageCode): Promise<Fortune> {
   }
 
   const card = fullTarotCards[cardNumber]
-  const match = randomItem(zodiacSigns)
+  const meta = getTarotCardMeta(cardNumber)
   return {
     type: 'tarot',
     lang,
     title: `${card.name} opens the day`,
-    body: sampleBodies[lang],
+    body: getTarotReadingBody(cardNumber, sampleBodies[lang]),
     card_name: card.name,
     card_number: card.number,
-    lucky_number: randomNumber(1, 9),
-    lucky_color: randomItem(['gold', 'purple', 'silver', 'rose', 'emerald', 'deep blue']),
-    compatibility: match,
+    lucky_number: meta.tarotNumber,
+    lucky_color: meta.luckyColor,
+    compatibility: meta.compatibility,
     affirmation: 'I trust the sign that arrives softly and choose the path with courage.',
-    mantra: null,
+    mantra: `So your next step: ${meta.action}.`,
     best_time: null,
     fortune_date: today,
   }

@@ -3,9 +3,9 @@
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
+import { getTarotCardMeta, getTarotReadingBody } from '@/lib/tarotMeanings'
 import type { Fortune, LanguageCode } from '@/types'
 
 type SpreadKey = 'single' | 'three' | 'five' | 'ten'
@@ -275,15 +275,19 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
                   {drawnCards.map((cardNumber, index) => {
                     const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
                     const reading = readings[cardNumber] ?? fallbackReading(cardNumber, lang)
+                    const meta = getTarotCardMeta(cardNumber)
                     return (
                       <article key={cardNumber} className="border-t border-white/15 pt-5">
                         <p className="text-xs uppercase tracking-[0.22em] text-mystic-gold">{spread.positions[index]}</p>
                         <h3 className="mt-2 font-display text-3xl text-white">{card.name}</h3>
                         <p className="mt-4 leading-8 text-mystic-light/74">{reading.body}</p>
+                        <p className="mt-4 font-semibold leading-7 text-mystic-gold">
+                          So your next step: {meta.action}.
+                        </p>
                         <div className="mt-5 flex flex-wrap gap-2 text-sm">
-                          <Badge label="Number" value={String(reading.lucky_number ?? 7)} />
-                          <Badge label="Color" value={reading.lucky_color ?? 'gold'} />
-                          <Badge label="Match" value={reading.compatibility ?? 'leo'} />
+                          <Badge label="Number" value={String(meta.tarotNumber)} />
+                          <Badge label="Color" value={meta.luckyColor} />
+                          <Badge label="Match" value={meta.compatibility} />
                         </div>
                       </article>
                     )
@@ -347,19 +351,19 @@ async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
 
 function fallbackReading(cardNumber: number, lang: LanguageCode): Fortune {
   const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
+  const meta = getTarotCardMeta(cardNumber)
   const opener = fallbackOpeners[card.number % fallbackOpeners.length]
   const action = fallbackActions[(card.number + 2) % fallbackActions.length]
-  const suit = card.name.includes(' of ') ? card.name.split(' of ')[1] : 'Major Arcana'
   return {
     type: 'tarot',
     lang,
     title: `${card.name} Tarot Reading`,
-    body: `${card.name} ${opener}. In the ${suit} current, this card highlights the place where your attention, timing, and desire are no longer moving at the same speed. ${action.charAt(0).toUpperCase() + action.slice(1)}. The message is not to force certainty, but to read the small pressure in the moment and let it show you the next honest direction.`,
+    body: `${getTarotReadingBody(cardNumber, opener)} ${action.charAt(0).toUpperCase() + action.slice(1)} as the spread unfolds.`,
     card_name: card.name,
     card_number: card.number,
-    lucky_number: (card.number % 9) + 1,
-    lucky_color: ['gold', 'purple', 'silver', 'rose', 'emerald', 'deep blue'][card.number % 6],
-    compatibility: zodiacSigns[card.number % zodiacSigns.length],
+    lucky_number: meta.tarotNumber,
+    lucky_color: meta.luckyColor,
+    compatibility: meta.compatibility,
   }
 }
 

@@ -4,9 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { zodiacSigns } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
+import { getTarotCardMeta, getTarotReadingBody } from '@/lib/tarotMeanings'
 import type { Fortune, LanguageCode } from '@/types'
 
 type RandomTarotReadingProps = {
@@ -147,6 +147,7 @@ export default function RandomTarotReading({
   }
 
   const reading = selectedCard !== null ? tarot ?? fallbackTarot(lang, selectedCard) : null
+  const readingMeta = selectedCard !== null ? getTarotCardMeta(selectedCard) : null
   const copy = dayPeriod ? periodCopy[dayPeriod] : null
   const readingTitle =
     reading && copy ? `${reading.card_name || reading.title} ${copy.titleSuffix}` : reading?.title
@@ -166,13 +167,18 @@ export default function RandomTarotReading({
                 : copy?.emptyBody ??
                   'Three cards are waiting face down. Let your attention settle, choose one, and your daily reading will open from that card.'}
             </p>
+            {reading && readingMeta ? (
+              <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-mystic-gold">
+                So your next step: {readingMeta.action}.
+              </p>
+            ) : null}
             {reading ? (
               <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
                 {readFull}
               </Link>
             ) : null}
           </div>
-          <div className="daily-arc mx-auto flex min-h-[300px] w-full max-w-[520px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">
+          <div className="daily-arc mx-auto flex min-h-[340px] w-full max-w-[620px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">
             {spread.map((cardNumber, index) => {
               const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
               const isSelected = selectedCard === cardNumber
@@ -185,6 +191,7 @@ export default function RandomTarotReading({
                   revealed={isRevealed}
                   selected={isSelected}
                   disabled={selectedCard !== null && !isSelected}
+                  previewable={selectedCard !== null && !isSelected}
                   index={index}
                   total={spread.length}
                   onChoose={() => chooseCard(cardNumber)}
@@ -199,9 +206,9 @@ export default function RandomTarotReading({
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">{lucky}</p>
           <div className="mt-6 grid gap-5 sm:grid-cols-3">
-            <Signal label="Number" value={reading ? String(reading.lucky_number ?? 7) : '-'} />
-            <Signal label="Color" value={reading?.lucky_color ?? '-'} />
-            <Signal label="Match" value={reading?.compatibility ?? '-'} />
+            <Signal label="Number" value={readingMeta ? String(readingMeta.tarotNumber) : '-'} />
+            <Signal label="Color" value={readingMeta?.luckyColor ?? '-'} />
+            <Signal label="Match" value={readingMeta?.compatibility ?? '-'} />
           </div>
         </div>
         <form className="self-end border-l border-mystic-gold/30 pl-6">
@@ -292,16 +299,17 @@ function dailyChoiceStorageKey(date: string, period: DayPeriod) {
 
 function fallbackTarot(lang: LanguageCode, cardNumber: number): Fortune {
   const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
+  const meta = getTarotCardMeta(cardNumber)
   return {
     type: 'tarot',
     lang,
     title: `${card.name} opens the day`,
-    body: fallbackBodies[lang],
+    body: getTarotReadingBody(cardNumber, fallbackBodies[lang]),
     card_name: card.name,
     card_number: card.number,
-    lucky_number: Math.floor(Math.random() * 9) + 1,
-    lucky_color: ['gold', 'purple', 'silver', 'rose', 'emerald', 'deep blue'][Math.floor(Math.random() * 6)],
-    compatibility: zodiacSigns[Math.floor(Math.random() * zodiacSigns.length)],
+    lucky_number: meta.tarotNumber,
+    lucky_color: meta.luckyColor,
+    compatibility: meta.compatibility,
   }
 }
 
@@ -320,6 +328,7 @@ function ChoiceTarotCard({
   revealed,
   selected,
   disabled,
+  previewable,
   index,
   total,
   onChoose,
@@ -329,6 +338,7 @@ function ChoiceTarotCard({
   revealed: boolean
   selected: boolean
   disabled: boolean
+  previewable: boolean
   index: number
   total: number
   onChoose: () => void
@@ -336,9 +346,9 @@ function ChoiceTarotCard({
   const center = (total - 1) / 2
   const offset = index - center
   const arcStyle = {
-    '--arc-x': `${offset * -20}px`,
-    '--arc-y': `${Math.abs(offset) * 22}px`,
-    '--arc-rotate': `${offset * 9}deg`,
+    '--arc-x': `${offset * -22}px`,
+    '--arc-y': `${Math.abs(offset) * 24}px`,
+    '--arc-rotate': `${offset * 8}deg`,
     '--arc-z': selected ? 30 : 10 - Math.abs(offset),
     animationDelay: `${index * 0.08}s`,
   } as CSSProperties
@@ -350,7 +360,9 @@ function ChoiceTarotCard({
       aria-disabled={disabled}
       aria-pressed={selected}
       aria-label={`Choose ${name}`}
-      className={`daily-arc-card group bg-transparent p-0 text-center ${
+      className={`daily-arc-card group bg-transparent p-0 text-center ${selected ? 'is-selected-card' : ''} ${
+        previewable ? 'can-preview' : ''
+      } ${
         disabled ? 'cursor-default opacity-80' : 'cursor-pointer'
       }`}
       style={arcStyle}
@@ -387,8 +399,8 @@ function ChoiceTarotCard({
         .daily-arc-card {
           position: relative;
           z-index: var(--arc-z);
-          width: 118px;
-          margin-inline: -8px;
+          width: 138px;
+          margin-inline: -12px;
           perspective: 1000px;
           transform: translate(var(--arc-x), var(--arc-y)) rotate(var(--arc-rotate));
           transform-origin: 50% 120%;
@@ -404,6 +416,12 @@ function ChoiceTarotCard({
           outline: none;
         }
 
+        .daily-arc-card.is-selected-card:hover,
+        .daily-arc-card.is-selected-card:focus-visible {
+          transform: translate(var(--arc-x), calc(var(--arc-y) - 5px)) rotate(var(--arc-rotate));
+          filter: drop-shadow(0 0 26px rgba(245, 196, 81, 0.62));
+        }
+
         .choice-card {
           transform-style: preserve-3d;
           transform: rotateY(180deg);
@@ -415,6 +433,11 @@ function ChoiceTarotCard({
         }
 
         .choice-card.is-selected {
+          transform: rotateY(0deg);
+        }
+
+        .daily-arc-card.can-preview:hover .choice-card,
+        .daily-arc-card.can-preview:focus-visible .choice-card {
           transform: rotateY(0deg);
         }
 
@@ -508,8 +531,8 @@ function ChoiceTarotCard({
 
         @media (min-width: 640px) {
           .daily-arc-card {
-            width: 132px;
-            margin-inline: -10px;
+            width: 158px;
+            margin-inline: -14px;
           }
         }
 
