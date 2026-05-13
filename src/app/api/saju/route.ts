@@ -3,7 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 import type { SajuPillar, SajuResult } from '@/types'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const DEFAULT_MODELS = ['openrouter/free']
+const OLLAMA_URL = process.env.OLLAMA_URL ?? 'https://ollama.com/api/chat'
+const DEFAULT_MODELS = [
+  'openai/gpt-oss-20b:free',
+  'openai/gpt-oss-120b:free',
+  'z-ai/glm-4.5-air:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'openrouter/free',
+]
+const DEFAULT_OLLAMA_MODELS = ['gemma4:31b-cloud', 'gpt-oss:20b']
 const DEPRECATED_MODELS = new Set([
   'qwen/qwen-2.5-72b-instruct:free',
   'deepseek/deepseek-chat-v3-0324:free',
@@ -68,46 +77,235 @@ function validatePayload(payload: SajuPayload) {
 }
 
 async function generateReading(payload: SajuPayload, fallback: SajuResult): Promise<SajuResult> {
-  const key = getOpenRouterKey()
-  if (!key) return fallback
+  const prompt = cleanSajuPrompt(payload)
+  const ollamaKey = getOllamaKey()
+  if (ollamaKey) {
+    const ollamaResult = await generateWithOllama(prompt, ollamaKey)
+    if (ollamaResult) return normalizeResult(ollamaResult, fallback)
+  }
 
-  const prompt = sajuPrompt(payload)
+  const openRouterKey = getOpenRouterKey()
+  if (!openRouterKey) return fallback
 
+  const openRouterResult = await generateWithOpenRouter(prompt, openRouterKey)
+  return openRouterResult ? normalizeResult(openRouterResult, fallback) : fallback
+}
+
+async function generateWithOllama(prompt: string, key: string): Promise<Partial<SajuResult> | null> {
   try {
-    const response = await fetch(OPENROUTER_URL, {
+    const response = await fetch(OLLAMA_URL, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'https://k-mystic.vercel.app',
-        'X-Title': process.env.OPENROUTER_APP_NAME ?? 'K-Mystic',
       },
       body: JSON.stringify({
-        model: pickOpenRouterModel(),
+        model: pickOllamaModel(),
         messages: [
           {
             role: 'system',
-            content: 'You are a Korean Four Pillars reader. Return valid JSON only.',
+            content: 'You are a Korean Four Pillars reader. Return valid JSON only. Do not include markdown fences.',
           },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.82,
-        max_tokens: 1400,
+        stream: false,
+        format: 'json',
+        options: {
+          temperature: 0.82,
+          num_predict: 1400,
+        },
       }),
     })
 
-    if (!response.ok) return fallback
+    if (!response.ok) return null
 
     const data = await response.json()
-    const content = data?.choices?.[0]?.message?.content
-    if (typeof content !== 'string') return fallback
-    return normalizeResult(JSON.parse(content), fallback)
+    const content = data?.message?.content
+    if (typeof content !== 'string') return null
+    return extractJson(content)
   } catch {
-    return fallback
+    return null
   }
 }
 
+async function generateWithOpenRouter(prompt: string, key: string): Promise<Partial<SajuResult> | null> {
+  const models = pickOpenRouterModels()
+
+  for (const model of models) {
+    try {
+      const response = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'https://k-mystic.vercel.app',
+          'X-Title': process.env.OPENROUTER_APP_NAME ?? 'K-Mystic',
+        },
+        body: JSON.stringify({
+          model,
+          provider: {
+            sort: 'throughput',
+          },
+          transforms: ['middle-out'],
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a careful Korean Four Pillars (Saju) reader. Return one valid JSON object only. Do not include markdown fences, prefaces, or warnings.',
+            },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.72,
+          max_tokens: 2200,
+        }),
+      })
+
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '')
+        console.warn(`OpenRouter Saju request failed for ${model}: ${response.status} ${detail.slice(0, 240)}`)
+        continue
+      }
+
+      const data = await response.json()
+      const content = data?.choices?.[0]?.message?.content
+      if (typeof content !== 'string') {
+        console.warn(`OpenRouter Saju response was empty for ${model}`)
+        continue
+      }
+
+      const parsed = extractJson(content)
+      if (Object.keys(parsed).length) return parsed
+      console.warn(`OpenRouter Saju response did not contain usable JSON for ${model}: ${content.slice(0, 240)}`)
+    } catch (error) {
+      console.warn(`OpenRouter Saju request errored for ${model}:`, error)
+    }
+  }
+
+  return null
+}
+
 function sajuPrompt({ year, month, day, hour, gender, language }: SajuPayload) {
+  return `
+You are a master Korean Four Pillars (?ъ＜?붿옄) reader
+with 30 years of experience.
+
+Analyze the Four Pillars for:
+- Birth year: ${year}
+- Birth month: ${month}
+- Birth day: ${day}
+- Birth hour: ${hour || 'unknown'}
+- Gender: ${gender}
+
+Calculate:
+1. 泥쒓컙 (Heavenly Stems): 媛묒쓣蹂묒젙臾닿린寃쎌떊?꾧퀎
+2. 吏吏 (Earthly Branches): ?먯텞?몃쵖吏꾩궗?ㅻ??좎쑀?좏빐
+3. ?ㅽ뻾 (Five Elements) balance
+
+Provide detailed reading in ${language}:
+- Innate personality and talents
+- Life destiny and major themes
+- This year's fortune (2026)
+- Love and relationships
+- Career and wealth
+- Health guidance
+- Lucky elements (color, number, direction)
+
+Writing style:
+- Ancient wisdom meets modern insight
+- Warm, encouraging, specific
+- 400-500 words total
+
+Return JSON only:
+{
+  "pillars": {
+    "year": {"stem": "媛?, "branch": "??, "element": "Wood"},
+    "month": {"stem": "??, "branch": "異?, "element": "Earth"},
+    "day": {"stem": "蹂?, "branch": "??, "element": "Fire"},
+    "hour": {"stem": "??, "branch": "臾?, "element": "Wood"}
+  },
+  "elements": {
+    "wood": 30,
+    "fire": 25,
+    "earth": 20,
+    "metal": 15,
+    "water": 10
+  },
+  "personality": "...",
+  "destiny": "...",
+  "this_year": "...",
+  "love": "...",
+  "career": "...",
+  "health": "...",
+  "lucky_color": "...",
+  "lucky_number": 7,
+  "lucky_direction": "South"
+}
+`.trim()
+}
+
+function cleanSajuPrompt({ year, month, day, hour, gender, language }: SajuPayload) {
+  const hourText = hour ? `${hour} branch time` : 'unknown birth hour'
+
+  return `
+Create a Korean Four Pillars of Destiny (Saju / 사주팔자) reading for a consumer astrology website.
+
+Birth data:
+- Year: ${year}
+- Month: ${month}
+- Day: ${day}
+- Birth hour: ${hourText}
+- Gender: ${gender || 'unspecified'}
+- Output language: ${language}
+
+Interpretation requirements:
+- Calculate or infer four pillars using Heavenly Stems and Earthly Branches.
+- Use romanized stem names only: Jia, Yi, Bing, Ding, Wu, Ji, Geng, Xin, Ren, Gui.
+- Use branch animal names only: Rat, Ox, Tiger, Rabbit, Dragon, Snake, Horse, Goat, Monkey, Rooster, Dog, Pig.
+- Use Five Elements only: Wood, Fire, Earth, Metal, Water.
+- Make the reading feel personal to the exact birth date and hour. Mention seasonal tone, dominant element, weaker element, and how the year/day pillars shape behavior.
+- For the yearly section, treat 2026 as Bing-Wu, the Fire Horse year. Do not call 2026 a Monkey, Metal Monkey, or any other year.
+- Keep the tone warm, useful, grounded, and non-fatalistic. Do not make medical, legal, or financial guarantees.
+- Do not say you are unable to calculate. If the birth hour is unknown, explain the hour pillar as an estimated tendency.
+- Avoid generic stock phrases. Every section should contain concrete guidance.
+- Avoid mojibake, broken characters, markdown fences, comments, and text outside JSON.
+
+Length requirements:
+- personality: 90-130 words
+- destiny: 90-130 words
+- this_year: 80-120 words, focused on 2026
+- love: 70-110 words
+- career: 80-120 words
+- health: 60-90 words, framed as wellness guidance, not diagnosis
+
+Return exactly one valid JSON object with this schema:
+{
+  "pillars": {
+    "year": {"stem": "Jia", "branch": "Rat", "element": "Wood"},
+    "month": {"stem": "Yi", "branch": "Ox", "element": "Earth"},
+    "day": {"stem": "Bing", "branch": "Tiger", "element": "Fire"},
+    "hour": {"stem": "Ding", "branch": "Rabbit", "element": "Wood"}
+  },
+  "elements": {
+    "wood": 30,
+    "fire": 25,
+    "earth": 20,
+    "metal": 15,
+    "water": 10
+  },
+  "personality": "90-130 words",
+  "destiny": "90-130 words",
+  "this_year": "80-120 words",
+  "love": "70-110 words",
+  "career": "80-120 words",
+  "health": "60-90 words",
+  "lucky_color": "specific color",
+  "lucky_number": 7,
+  "lucky_direction": "East"
+}
+`.trim()
+}
+
+function legacySajuPrompt({ year, month, day, hour, gender, language }: SajuPayload) {
   return `
 You are a master Korean Four Pillars (사주팔자) reader
 with 30 years of experience.
@@ -166,6 +364,54 @@ Return JSON only:
 `.trim()
 }
 
+function legacyCleanSajuPrompt({ year, month, day, hour, gender, language }: SajuPayload) {
+  return `
+You are a master Korean Four Pillars (Saju) reader with 30 years of experience.
+
+Analyze the Four Pillars for:
+- Birth year: ${year}
+- Birth month: ${month}
+- Birth day: ${day}
+- Birth hour: ${hour || 'unknown'}
+- Gender: ${gender}
+
+Calculate:
+1. Heavenly Stems using romanized names: Jia, Yi, Bing, Ding, Wu, Ji, Geng, Xin, Ren, Gui
+2. Earthly Branches using animal names: Rat, Ox, Tiger, Rabbit, Dragon, Snake, Horse, Goat, Monkey, Rooster, Dog, Pig
+3. Five Elements balance: Wood, Fire, Earth, Metal, Water
+
+Provide a specific reading in ${language}. Do not reuse generic stock sentences.
+Use the exact birth date and hour to make the interpretation feel personal.
+Avoid mojibake, broken characters, markdown fences, and commentary outside JSON.
+
+Return JSON only:
+{
+  "pillars": {
+    "year": {"stem": "Jia", "branch": "Rat", "element": "Wood"},
+    "month": {"stem": "Yi", "branch": "Ox", "element": "Earth"},
+    "day": {"stem": "Bing", "branch": "Tiger", "element": "Fire"},
+    "hour": {"stem": "Ding", "branch": "Rabbit", "element": "Wood"}
+  },
+  "elements": {
+    "wood": 30,
+    "fire": 25,
+    "earth": 20,
+    "metal": 15,
+    "water": 10
+  },
+  "personality": "...",
+  "destiny": "...",
+  "this_year": "...",
+  "love": "...",
+  "career": "...",
+  "health": "...",
+  "lucky_color": "...",
+  "lucky_number": 7,
+  "lucky_direction": "South"
+}
+`.trim()
+}
+
 function calculateSaju(payload: SajuPayload): SajuResult {
   const yearIndex = positiveMod(payload.year - 4, 60)
   const monthIndex = positiveMod(payload.year * 12 + payload.month + 14, 60)
@@ -181,7 +427,7 @@ function calculateSaju(payload: SajuPayload): SajuResult {
   }
   const elements = elementBalance(pillars)
   const dominant = dominantElement(elements)
-  const text = localizedSajuText(payload, dominant)
+  const text = personalizedSajuText(payload, dominant, pillars, elements)
 
   return {
     pillars,
@@ -204,6 +450,74 @@ function getLang(payload: SajuPayload): Lang {
   if (payload.language === 'Japanese') return 'ja'
   if (payload.language === 'Traditional Chinese') return 'zh-TW'
   return 'en'
+}
+
+function personalizedSajuText(
+  payload: SajuPayload,
+  dominant: string,
+  pillars: SajuResult['pillars'],
+  elements: SajuResult['elements'],
+) {
+  const lang = getLang(payload)
+  const color = elementColor(dominant, lang)
+  const direction = elementDirection(dominant, lang)
+  const element = elementName(dominant, lang)
+  const seed = positiveMod(payload.year * 13 + payload.month * 31 + payload.day * 17 + hourSeed(payload.hour), 97)
+  const season = seasonName(payload.month, lang)
+  const dayTone = toneName(seed, lang)
+  const focus = focusName(seed + payload.day, lang)
+  const relation = relationName(seed + payload.month, lang)
+  const work = workName(seed + payload.year, lang)
+  const health = healthName(seed + hourSeed(payload.hour), lang)
+  const weakElement = weakestElement(elements)
+  const weak = elementName(weakElement, lang)
+  const yearElement = pillars.year.element
+  const dayElement = pillars.day.element
+
+  const texts = {
+    en: {
+      personality: `Born in the ${season} rhythm, your chart carries a strong ${element} signature with a ${dayTone} temperament. The year pillar leans toward ${yearElement}, shaping how you meet the outside world, while the day pillar leans toward ${dayElement}, showing how you make decisions when pressure rises. You are at your best when you balance ${element} momentum with the quieter ${weak} current.`,
+      destiny: `Your destiny theme centers on ${focus}. This chart does not ask you to chase every open door; it favors choices that repeat, mature, and become reliable over time. When discipline and intuition move together, opportunities arrive through people who recognize your consistency.`,
+      this_year: `In 2026, your luck improves when you simplify priorities and make one promise at a time. The ${dominant} influence supports visible progress, but the weaker ${weak} current asks you to leave room for rest, review, and careful timing before major commitments.`,
+      love: `In love, your strongest pattern is ${relation}. You respond well to sincerity that is proven through behavior, not only words. Relationships become smoother when you state what you need early and avoid testing someone through silence.`,
+      career: `Career and wealth are guided by ${work}. Build repeatable systems, document what works, and avoid scattering your effort across too many unfinished plans. Money luck strengthens through practical skill, patient negotiation, and steady visibility.`,
+      health: `Your body asks for ${health}. The chart is sensitive to imbalance between effort and recovery, so protect sleep, hydration, and regular movement. When stress rises, reduce stimulation before adding more obligations.`,
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    es: {
+      personality: `Nacido bajo el ritmo de ${season}, tu carta muestra una fuerte influencia de ${element} con un temperamento ${dayTone}. El pilar anual se inclina hacia ${yearElement}, marcando como encuentras el mundo exterior, mientras que el pilar del dia se inclina hacia ${dayElement}, revelando como decides bajo presion. Tu fuerza crece cuando equilibras el impulso de ${element} con la corriente mas silenciosa de ${weak}.`,
+      destiny: `Tu tema de destino gira alrededor de ${focus}. Esta carta no te pide seguir cada puerta abierta; favorece elecciones que se repiten, maduran y se vuelven confiables. Cuando disciplina e intuicion avanzan juntas, las oportunidades llegan por personas que reconocen tu constancia.`,
+      this_year: `En 2026, tu suerte mejora al simplificar prioridades y hacer una promesa a la vez. La influencia de ${dominant} apoya progreso visible, pero el elemento mas debil, ${weak}, pide descanso, revision y buen momento antes de compromisos grandes.`,
+      love: `En el amor, tu patron principal es ${relation}. Respondes mejor a una sinceridad demostrada con actos, no solo palabras. Las relaciones fluyen cuando expresas tus necesidades temprano y evitas probar al otro con silencio.`,
+      career: `Carrera y riqueza se guian por ${work}. Crea sistemas repetibles, registra lo que funciona y evita dispersar tu energia en demasiados planes incompletos. La suerte economica crece con habilidad practica, negociacion paciente y presencia constante.`,
+      health: `Tu cuerpo pide ${health}. La carta es sensible al desequilibrio entre esfuerzo y recuperacion, asi que protege descanso, hidratacion y movimiento regular. Cuando suba el estres, reduce estimulos antes de asumir mas obligaciones.`,
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    ja: {
+      personality: `${season}のリズムに生まれたあなたの命式には、${element}の気が強く、${dayTone}な気質が表れています。年柱は${yearElement}に傾き、外の世界との向き合い方を示し、日柱は${dayElement}に傾いて迷った時の決断の癖を映します。${element}の勢いに、弱まりやすい${weak}の静けさを足すほど本来の力が安定します。`,
+      destiny: `運命のテーマは${focus}です。すべての扉を急いで選ぶより、繰り返し育てられる選択を大切にする命式です。規律と直感が同じ方向を向く時、あなたの誠実さを見ていた人から機会が届きます。`,
+      this_year: `2026年は、優先順位を絞り、一度に一つの約束を守るほど運が整います。${dominant}の気は目に見える前進を助けますが、弱い${weak}の気は休息、見直し、慎重な時機を求めています。`,
+      love: `恋愛では${relation}が大きな鍵です。言葉だけでなく、行動で示される誠実さに心が開きます。必要なことを早めに伝え、沈黙で相手を試さないほど関係は柔らかくなります。`,
+      career: `仕事と金運は${work}によって伸びます。再現できる仕組みを作り、うまくいく手順を残し、未完の計画を増やしすぎないこと。実務力、落ち着いた交渉、継続的な存在感が財運を強めます。`,
+      health: `体は${health}を求めています。努力と回復の差が開くと乱れやすい命式なので、睡眠、水分、軽い運動を守ってください。ストレスが強い時は予定を足す前に刺激を減らすことが大切です。`,
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+    'zh-TW': {
+      personality: `出生在${season}節奏中的你，命盤帶有強烈的${element}氣息，並呈現${dayTone}的性情。年柱偏向${yearElement}，顯示你面對外界的方式；日柱偏向${dayElement}，反映你在壓力下的決策習慣。當${element}的推動力能與較弱的${weak}之氣平衡時，你會更穩。`,
+      destiny: `你的命運主題圍繞著${focus}。這不是追逐每一扇門的命盤，而是適合把能反覆累積的選擇慢慢養大。當紀律與直覺走向同一邊，機會會從看見你穩定性的人身上出現。`,
+      this_year: `2026年，你的運勢會在簡化優先順序、一次守好一個承諾時變強。${dominant}之氣支持看得見的進展，但較弱的${weak}提醒你在重大決定前保留休息、檢視與等待時機的空間。`,
+      love: `感情中的關鍵模式是${relation}。你更容易被用行動證明的真誠打動，而不是只聽漂亮的話。越早說清需要，越少用沉默試探對方，關係就越柔和。`,
+      career: `事業與財運受到${work}引導。建立可重複的系統，記錄有效的方法，避免把能量分散在太多未完成的計畫上。實務能力、耐心協商與穩定曝光會帶來財運。`,
+      health: `身體需要${health}。此命盤對努力與恢復的失衡較敏感，因此要守住睡眠、補水與規律活動。壓力升高時，先減少刺激，再考慮增加責任。`,
+      lucky_color: color,
+      lucky_direction: direction,
+    },
+  }
+
+  return texts[lang]
 }
 
 function localizedSajuText(payload: SajuPayload, dominant: string) {
@@ -379,6 +693,71 @@ function normalizeResult(raw: Partial<SajuResult>, fallback: SajuResult): SajuRe
   }
 }
 
+function extractJson(text: string): Partial<SajuResult> {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+
+  const direct = parseJsonObject(cleaned)
+  if (direct) return direct
+
+  const start = cleaned.indexOf('{')
+  const end = cleaned.lastIndexOf('}')
+  if (start >= 0 && end > start) {
+    const extracted = cleaned.slice(start, end + 1)
+    const parsed = parseJsonObject(extracted) ?? parseJsonObject(escapeControlCharacters(extracted))
+    if (parsed) return parsed
+  }
+
+  return {}
+}
+
+function parseJsonObject(text: string) {
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object') return parsed as Partial<SajuResult>
+  } catch {
+    return null
+  }
+  return null
+}
+
+function escapeControlCharacters(text: string) {
+  let inString = false
+  let escaped = false
+  let result = ''
+
+  for (const char of text) {
+    if (escaped) {
+      result += char
+      escaped = false
+      continue
+    }
+
+    if (char === '\\') {
+      result += char
+      escaped = true
+      continue
+    }
+
+    if (char === '"') {
+      inString = !inString
+      result += char
+      continue
+    }
+
+    if (inString && (char === '\n' || char === '\r' || char === '\t')) {
+      result += ' '
+      continue
+    }
+
+    result += char
+  }
+
+  return result
+}
+
 function normalizeElements(
   raw: Partial<SajuResult['elements']> | undefined,
   fallback: SajuResult['elements'],
@@ -401,6 +780,99 @@ function textOr(value: unknown, fallback: string) {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback
 }
 
+function hourSeed(hour: string | undefined) {
+  return hour ? Array.from(hour).reduce((sum, char) => sum + char.charCodeAt(0), 0) : 0
+}
+
+function weakestElement(elements: SajuResult['elements']) {
+  const entries = Object.entries(elements) as Array<[keyof SajuResult['elements'], number]>
+  const [key] = entries.sort((a, b) => a[1] - b[1])[0]
+  return key.charAt(0).toUpperCase() + key.slice(1)
+}
+
+function pickLocalized<T extends string>(items: Record<Lang, T[]>, index: number, lang: Lang) {
+  const list = items[lang]
+  return list[positiveMod(index, list.length)]
+}
+
+function seasonName(month: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['early spring', 'deep spring', 'first summer', 'high summer', 'late summer', 'autumn', 'late autumn', 'winter'],
+      es: ['inicio de primavera', 'primavera profunda', 'primer verano', 'pleno verano', 'final de verano', 'otono', 'otono tardio', 'invierno'],
+      ja: ['初春', '春の深まり', '初夏', '盛夏', '晩夏', '秋', '晩秋', '冬'],
+      'zh-TW': ['初春', '深春', '初夏', '盛夏', '夏末', '秋季', '深秋', '冬季'],
+    },
+    Math.max(0, Math.min(11, month - 1)),
+    lang,
+  )
+}
+
+function toneName(seed: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['focused', 'sensitive', 'resilient', 'observant', 'decisive', 'adaptive'],
+      es: ['concentrado', 'sensible', 'resiliente', 'observador', 'decidido', 'adaptable'],
+      ja: ['集中力のある', '感受性の高い', '粘り強い', '観察力のある', '決断力のある', '適応力のある'],
+      'zh-TW': ['專注', '敏銳', '有韌性', '善於觀察', '果斷', '適應力強'],
+    },
+    seed,
+    lang,
+  )
+}
+
+function focusName(seed: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['turning skill into trust', 'learning when to lead and when to wait', 'building a life that can hold your ambition', 'choosing alliances with clearer boundaries', 'turning old pressure into useful discipline', 'making your private insight visible'],
+      es: ['convertir habilidad en confianza', 'aprender cuando liderar y cuando esperar', 'construir una vida que sostenga tu ambicion', 'elegir alianzas con limites claros', 'transformar presion antigua en disciplina util', 'hacer visible tu intuicion privada'],
+      ja: ['技術を信頼に変えること', '導く時と待つ時を学ぶこと', '志を支えられる生活を作ること', '境界線の明確な縁を選ぶこと', '古い重圧を役立つ規律に変えること', '内側の洞察を形にすること'],
+      'zh-TW': ['把能力轉化為信任', '學會何時帶領、何時等待', '建立能承載野心的生活', '選擇邊界清楚的合作關係', '把舊壓力轉為有用的紀律', '讓私下的洞察被看見'],
+    },
+    seed,
+    lang,
+  )
+}
+
+function relationName(seed: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['slow trust', 'clear reassurance', 'shared routines', 'honest repair', 'emotional steadiness', 'patient conversation'],
+      es: ['confianza lenta', 'seguridad clara', 'rutinas compartidas', 'reparacion honesta', 'estabilidad emocional', 'conversacion paciente'],
+      ja: ['ゆっくり育つ信頼', 'はっきりした安心感', '共有できる習慣', '誠実な修復', '感情の安定', '忍耐強い対話'],
+      'zh-TW': ['慢慢建立的信任', '清楚的安全感', '共同的日常', '誠實修復', '情緒穩定', '耐心溝通'],
+    },
+    seed,
+    lang,
+  )
+}
+
+function workName(seed: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['system building', 'specialist skill', 'quiet leadership', 'measured risk', 'long-range planning', 'collaborative strategy'],
+      es: ['construccion de sistemas', 'habilidad especializada', 'liderazgo discreto', 'riesgo medido', 'planificacion a largo plazo', 'estrategia colaborativa'],
+      ja: ['仕組み作り', '専門性', '静かなリーダーシップ', '慎重な挑戦', '長期計画', '協力的な戦略'],
+      'zh-TW': ['系統建立', '專業能力', '安靜的領導力', '有分寸的冒險', '長期規劃', '合作策略'],
+    },
+    seed,
+    lang,
+  )
+}
+
+function healthName(seed: number, lang: Lang) {
+  return pickLocalized(
+    {
+      en: ['steady recovery and warmer routines', 'lighter evenings and deeper sleep', 'balanced meals and gentle movement', 'less overthinking before rest', 'regular hydration and shoulder release', 'more sunlight and quieter mornings'],
+      es: ['recuperacion constante y rutinas mas calidas', 'noches mas ligeras y sueno profundo', 'comidas equilibradas y movimiento suave', 'menos pensamiento excesivo antes de descansar', 'hidratacion regular y relajar hombros', 'mas luz solar y mananas tranquilas'],
+      ja: ['安定した回復と温かな習慣', '軽い夜と深い睡眠', '整った食事と穏やかな運動', '休む前に考えすぎないこと', 'こまめな水分と肩の緊張を抜くこと', '日光と静かな朝'],
+      'zh-TW': ['穩定恢復與溫和作息', '較輕盈的夜晚與深睡', '均衡飲食與柔和活動', '休息前少一點過度思考', '規律補水與放鬆肩頸', '更多陽光與安靜早晨'],
+    },
+    seed,
+    lang,
+  )
+}
+
 function positiveMod(value: number, divisor: number) {
   return ((value % divisor) + divisor) % divisor
 }
@@ -413,13 +885,29 @@ function getOpenRouterKey() {
     .filter(Boolean)[0]
 }
 
-function pickOpenRouterModel() {
+function getOllamaKey() {
+  const raw = process.env.OLLAMA_API_KEYS || process.env.OLLAMA_API_KEY || ''
+  return raw
+    .split(',')
+    .map((key) => key.trim())
+    .filter(Boolean)[0]
+}
+
+function pickOllamaModel() {
+  const customModels = (process.env.OLLAMA_MODELS || '')
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean)
+  const list = customModels.length ? customModels : DEFAULT_OLLAMA_MODELS
+  return list[Math.floor(Math.random() * list.length)]
+}
+
+function pickOpenRouterModels() {
   const customModels = (process.env.OPENROUTER_MODELS || '')
     .split(',')
     .map((model) => model.trim())
     .filter((model) => model && !DEPRECATED_MODELS.has(model))
-  const list = [...DEFAULT_MODELS, ...customModels.filter((model) => !DEFAULT_MODELS.includes(model))]
-  return list[Math.floor(Math.random() * list.length)]
+  return [...customModels, ...DEFAULT_MODELS.filter((model) => !customModels.includes(model))]
 }
 
 async function saveReading(payload: SajuPayload, result: SajuResult) {

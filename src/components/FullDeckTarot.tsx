@@ -374,7 +374,7 @@ function ShuffleStage() {
         <div className="shuffle-deck mx-auto h-[190px] w-[138px]">
           {Array.from({ length: 7 }).map((_, index) => (
             <span key={index} style={{ '--shuffle-index': index } as CSSProperties}>
-              <Image src={tarotBacks.classic} alt="" fill sizes="138px" className="object-cover" draggable={false} />
+              <Image src={tarotBacks.moon} alt="" fill sizes="138px" className="object-cover" draggable={false} />
             </span>
           ))}
         </div>
@@ -447,7 +447,7 @@ function PoolCard({
       style={{ animationDelay: `${index * 45}ms` }}
     >
       <span className="relative block aspect-[10/17] overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.2)]">
-        <Image src={tarotBacks.classic} alt="" fill sizes="112px" className="object-cover" draggable={false} />
+        <Image src={tarotBacks.moon} alt="" fill sizes="112px" className="object-cover" draggable={false} />
         {selected ? (
           <span className="absolute inset-0 grid place-items-center bg-mystic-gold/18 text-3xl font-semibold text-white">
             {selectedIndex + 1}
@@ -543,7 +543,7 @@ function SpreadCard({
         >
           <span className="full-card-aura pointer-events-none absolute -inset-3 rounded-2xl border border-mystic-gold/60 opacity-0" />
           <span className="full-card-face full-card-back absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-[0_0_28px_rgba(245,196,81,0.28)] [backface-visibility:hidden]">
-            <Image src={tarotBacks.classic} alt="" fill sizes="168px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.moon} alt="" fill sizes="168px" className="object-cover" draggable={false} />
           </span>
           <span className="full-card-face full-card-front absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold bg-mystic-dark shadow-gold [backface-visibility:hidden]">
             <Image

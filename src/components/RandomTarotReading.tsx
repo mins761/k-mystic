@@ -362,7 +362,7 @@ function ChoiceTarotCard({
           }`}
         >
           <span className="choice-face choice-back absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark">
-            <Image src={tarotBacks.classic} alt="" fill sizes="132px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.moon} alt="" fill sizes="132px" className="object-cover" draggable={false} />
           </span>
           <span className="choice-face choice-front absolute inset-0 overflow-hidden rounded-xl border border-mystic-gold bg-mystic-dark">
             <Image
@@ -414,8 +414,6 @@ function ChoiceTarotCard({
           transform: rotateY(0deg);
         }
 
-        .daily-arc-card:hover .choice-card,
-        .daily-arc-card:focus-visible .choice-card,
         .choice-card.is-selected {
           transform: rotateY(0deg);
         }

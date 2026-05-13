@@ -606,7 +606,7 @@ function LoveCard({
           } ${disabled ? 'opacity-80' : 'hover:-translate-y-2 hover:drop-shadow-[0_0_22px_rgba(244,114,182,0.5)]'}`}
         >
           <div className="absolute inset-0 overflow-hidden rounded-xl border-2 border-pink-200/70 bg-mystic-dark shadow-[0_0_32px_rgba(236,72,153,0.32)] [backface-visibility:hidden]">
-            <Image src={tarotBacks.classic} alt="" fill sizes="180px" className="object-cover" draggable={false} />
+            <Image src={tarotBacks.moon} alt="" fill sizes="180px" className="object-cover" draggable={false} />
           </div>
           <div className="absolute inset-0 overflow-hidden rounded-xl border-2 border-mystic-gold/70 bg-mystic-dark shadow-gold [backface-visibility:hidden] [transform:rotateY(180deg)]">
             <Image

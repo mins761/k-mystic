@@ -318,6 +318,8 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
         </div>
       </section>
 
+      {!loading && !result ? <SajuGuide /> : null}
+
       {loading ? <SajuLoading copy={copy} /> : null}
 
       {result ? (
@@ -391,6 +393,52 @@ export default function SajuPage({ params }: { params: { lang: LanguageCode } })
         }
       `}</style>
     </main>
+  )
+}
+
+function SajuGuide() {
+  return (
+    <section className="mx-auto max-w-7xl px-5 py-16">
+      <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div>
+          <p className="text-sm uppercase tracking-[0.28em] text-mystic-gold">Before Your Reading</p>
+          <h2 className="mt-3 font-display text-5xl text-white">What Saju Looks For</h2>
+          <p className="mt-5 leading-8 text-mystic-light/72">
+            Saju, also called the Four Pillars of Destiny, reads the year, month, day, and birth-hour branches as a
+            symbolic map of temperament, timing, and balance. The goal is not to lock your future in place. It is to
+            notice which patterns repeat, where your strengths gather, and what kind of choices help your life feel more
+            aligned.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <GuideBlock
+            title="Four Pillars"
+            body="The year pillar points to public rhythm and family background, the month pillar to growth conditions, the day pillar to inner self, and the hour pillar to private hopes or later-life direction."
+          />
+          <GuideBlock
+            title="Five Elements"
+            body="Wood, Fire, Earth, Metal, and Water are read as a balance system. A strong element can show natural momentum, while a weaker one can suggest where rest, patience, or new habits may help."
+          />
+          <GuideBlock
+            title="Practical Guidance"
+            body="The reading translates the chart into everyday themes: personality, relationships, career, wellness routines, lucky color, number, and direction."
+          />
+          <GuideBlock
+            title="Best Use"
+            body="Use the result as a reflective guide. It can support journaling and decision-making, but it should not replace professional medical, legal, or financial advice."
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function GuideBlock({ title, body }: { title: string; body: string }) {
+  return (
+    <article className="border-t border-white/12 pt-5">
+      <h3 className="font-display text-3xl text-white">{title}</h3>
+      <p className="mt-3 leading-7 text-mystic-light/70">{body}</p>
+    </article>
   )
 }
 
