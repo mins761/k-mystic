@@ -143,7 +143,7 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden">
+    <main className="notranslate min-h-screen overflow-hidden" translate="no">
       <section className="relative px-5 py-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(245,196,81,0.16),transparent_28%),radial-gradient(circle_at_82%_24%,rgba(147,51,234,0.2),transparent_24%)]" />
         <div className="relative mx-auto max-w-7xl">
