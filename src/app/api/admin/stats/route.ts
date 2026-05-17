@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/serverSupabase'
+import { normalizeReferrer } from '@/lib/visitAnalytics'
 
 type StatsRequest = {
   password?: string
@@ -8,6 +9,9 @@ type StatsRequest = {
 type VisitRow = {
   path: string | null
   lang: string | null
+  country: string | null
+  referrer: string | null
+  ip_hash: string | null
   created_at: string
 }
 
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
   const sevenDaysAgo = new Date(now)
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  const [totalResult, todayResult, sevenDayResult, rowsResult] = await Promise.all([
+  const [totalResult, todayResult, sevenDayResult, extendedRowsResult] = await Promise.all([
     supabase.from('site_visits').select('id', { count: 'exact', head: true }),
     supabase
       .from('site_visits')
@@ -45,10 +49,18 @@ export async function POST(request: Request) {
       .gte('created_at', sevenDaysAgo.toISOString()),
     supabase
       .from('site_visits')
-      .select('path, lang, created_at')
+      .select('path, lang, country, referrer, ip_hash, created_at')
       .order('created_at', { ascending: false })
       .limit(10000),
   ])
+
+  const rowsResult = extendedRowsResult.error
+    ? await supabase
+        .from('site_visits')
+        .select('path, lang, referrer, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10000)
+    : extendedRowsResult
 
   const firstError = totalResult.error || todayResult.error || sevenDayResult.error || rowsResult.error
   if (firstError) {
@@ -58,13 +70,20 @@ export async function POST(request: Request) {
   const rows = (rowsResult.data ?? []) as VisitRow[]
   const pageViews = topCounts(rows.map((row) => row.path || '/'))
   const languageViews = topCounts(rows.map((row) => row.lang || 'unknown'))
+  const todayRows = rows.filter((row) => new Date(row.created_at) >= todayStart)
+  const uniqueToday = new Set(todayRows.map((row) => row.ip_hash).filter(Boolean)).size
+  const countryViews = topCounts(rows.map((row) => row.country || 'unknown'))
+  const referrerViews = topCounts(rows.map((row) => normalizeReferrer(row.referrer)))
 
   return NextResponse.json({
     total: totalResult.count ?? 0,
     today: todayResult.count ?? 0,
     sevenDays: sevenDayResult.count ?? 0,
+    uniqueToday,
     pageViews,
     languageViews,
+    countryViews,
+    referrerViews,
     generatedAt: now.toISOString(),
   })
 }

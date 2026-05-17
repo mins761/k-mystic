@@ -11,8 +11,11 @@ type Stats = {
   total: number
   today: number
   sevenDays: number
+  uniqueToday: number
   pageViews: CountItem[]
   languageViews: CountItem[]
+  countryViews: CountItem[]
+  referrerViews: CountItem[]
   generatedAt: string
 }
 
@@ -77,15 +80,18 @@ export default function AdminStats() {
 
         {stats ? (
           <div className="mt-10 space-y-10">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <Metric label="Total Visits" value={stats.total} />
               <Metric label="Today" value={stats.today} />
+              <Metric label="Unique Today" value={stats.uniqueToday} />
               <Metric label="Last 7 Days" value={stats.sevenDays} />
             </div>
 
             <div className="grid gap-8 lg:grid-cols-2">
               <Breakdown title="Page Views" items={stats.pageViews} />
               <Breakdown title="Language Views" items={stats.languageViews} />
+              <Breakdown title="Countries" items={stats.countryViews} />
+              <Breakdown title="Referrers" items={stats.referrerViews} />
             </div>
 
             <p className="text-xs text-mystic-light/40">

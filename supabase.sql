@@ -95,8 +95,18 @@ CREATE TABLE IF NOT EXISTS site_visits (
   lang TEXT CHECK (lang IS NULL OR lang IN ('en', 'es', 'ja', 'zh-TW')),
   referrer TEXT,
   user_agent TEXT,
+  country TEXT,
+  region TEXT,
+  city TEXT,
+  ip_hash TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE site_visits
+ADD COLUMN IF NOT EXISTS country TEXT,
+ADD COLUMN IF NOT EXISTS region TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS ip_hash TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_site_visits_created_at
 ON site_visits(created_at DESC);
@@ -106,6 +116,12 @@ ON site_visits(path);
 
 CREATE INDEX IF NOT EXISTS idx_site_visits_lang
 ON site_visits(lang);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_country
+ON site_visits(country);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_ip_hash_created_at
+ON site_visits(ip_hash, created_at DESC);
 
 ALTER TABLE fortunes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscribers_mystic ENABLE ROW LEVEL SECURITY;

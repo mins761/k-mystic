@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/serverSupabase'
 import { isLanguage } from '@/lib/i18n'
+import { getClientIp, getVercelGeo, hashVisitIp } from '@/lib/visitAnalytics'
 
 type VisitPayload = {
   path?: string
@@ -22,12 +23,29 @@ export async function POST(request: Request) {
     const requestHeaders = headers()
     const lang = payload.lang && isLanguage(payload.lang) ? payload.lang : inferLang(path)
 
-    await supabase.from('site_visits').insert({
+    const today = new Date().toISOString().slice(0, 10)
+    const geo = getVercelGeo(requestHeaders)
+
+    const visit = {
       path,
       lang,
       referrer: truncate(requestHeaders.get('referer'), 500),
       user_agent: truncate(requestHeaders.get('user-agent'), 500),
-    })
+      country: truncate(geo.country, 80),
+      region: truncate(geo.region, 120),
+      city: truncate(geo.city, 120),
+      ip_hash: hashVisitIp(getClientIp(requestHeaders), today),
+    }
+
+    const result = await supabase.from('site_visits').insert(visit)
+    if (result.error) {
+      await supabase.from('site_visits').insert({
+        path: visit.path,
+        lang: visit.lang,
+        referrer: visit.referrer,
+        user_agent: visit.user_agent,
+      })
+    }
 
     return NextResponse.json({ ok: true })
   } catch {
