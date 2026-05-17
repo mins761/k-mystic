@@ -50,6 +50,34 @@ test('normalizeReferrer groups empty, direct, same-site, and external referrers'
 
   assert.equal(normalizeReferrer(null), 'direct')
   assert.equal(normalizeReferrer('https://k-mystic.vercel.app/en/tarot'), 'internal')
+  assert.equal(
+    normalizeReferrer('https://k-mystic-nyl27wa6i-mins761s-projects.vercel.app/en'),
+    'internal',
+  )
   assert.equal(normalizeReferrer('https://www.google.com/search?q=tarot'), 'www.google.com')
   assert.equal(normalizeReferrer('not a url'), 'unknown')
+})
+
+test('buildVisitStats does not treat missing analytics columns as real unknown traffic', () => {
+  const { buildVisitStats } = loadVisitAnalytics()
+  const now = new Date('2026-05-17T12:00:00.000Z')
+  const todayStart = new Date('2026-05-17T00:00:00.000Z')
+
+  const stats = buildVisitStats(
+    [
+      {
+        path: '/en',
+        lang: 'en',
+        referrer: 'https://k-mystic.vercel.app/en/tarot',
+        created_at: '2026-05-17T10:00:00.000Z',
+      },
+    ],
+    todayStart,
+    false,
+  )
+
+  assert.equal(stats.uniqueToday, null)
+  assert.deepEqual(stats.countryViews, [])
+  assert.deepEqual(stats.referrerViews, [{ label: 'internal', count: 1 }])
+  assert.equal(stats.trackingSchemaReady, false)
 })

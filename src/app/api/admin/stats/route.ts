@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/serverSupabase'
-import { normalizeReferrer } from '@/lib/visitAnalytics'
+import { buildVisitStats, VisitAnalyticsRow } from '@/lib/visitAnalytics'
 
 type StatsRequest = {
   password?: string
-}
-
-type VisitRow = {
-  path: string | null
-  lang: string | null
-  country: string | null
-  referrer: string | null
-  ip_hash: string | null
-  created_at: string
 }
 
 export async function POST(request: Request) {
@@ -67,33 +58,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: firstError.message }, { status: 500 })
   }
 
-  const rows = (rowsResult.data ?? []) as VisitRow[]
-  const pageViews = topCounts(rows.map((row) => row.path || '/'))
-  const languageViews = topCounts(rows.map((row) => row.lang || 'unknown'))
-  const todayRows = rows.filter((row) => new Date(row.created_at) >= todayStart)
-  const uniqueToday = new Set(todayRows.map((row) => row.ip_hash).filter(Boolean)).size
-  const countryViews = topCounts(rows.map((row) => row.country || 'unknown'))
-  const referrerViews = topCounts(rows.map((row) => normalizeReferrer(row.referrer)))
+  const rows = (rowsResult.data ?? []) as VisitAnalyticsRow[]
+  const visitStats = buildVisitStats(rows, todayStart, !extendedRowsResult.error)
 
   return NextResponse.json({
     total: totalResult.count ?? 0,
     today: todayResult.count ?? 0,
     sevenDays: sevenDayResult.count ?? 0,
-    uniqueToday,
-    pageViews,
-    languageViews,
-    countryViews,
-    referrerViews,
+    ...visitStats,
     generatedAt: now.toISOString(),
   })
-}
-
-function topCounts(values: string[]) {
-  const counts = new Map<string, number>()
-  values.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1))
-
-  return Array.from(counts.entries())
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
-    .slice(0, 20)
 }

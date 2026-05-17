@@ -11,11 +11,12 @@ type Stats = {
   total: number
   today: number
   sevenDays: number
-  uniqueToday: number
+  uniqueToday: number | null
   pageViews: CountItem[]
   languageViews: CountItem[]
   countryViews: CountItem[]
   referrerViews: CountItem[]
+  trackingSchemaReady: boolean
   generatedAt: string
 }
 
@@ -90,7 +91,15 @@ export default function AdminStats() {
             <div className="grid gap-8 lg:grid-cols-2">
               <Breakdown title="Page Views" items={stats.pageViews} />
               <Breakdown title="Language Views" items={stats.languageViews} />
-              <Breakdown title="Countries" items={stats.countryViews} />
+              <Breakdown
+                title="Countries"
+                items={stats.countryViews}
+                emptyText={
+                  stats.trackingSchemaReady
+                    ? 'No country data recorded yet.'
+                    : 'Tracking schema pending. Run the site_visits migration.'
+                }
+              />
               <Breakdown title="Referrers" items={stats.referrerViews} />
             </div>
 
@@ -104,16 +113,24 @@ export default function AdminStats() {
   )
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
+function Metric({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="border-t border-mystic-gold/40 pt-5">
       <p className="text-xs uppercase tracking-[0.25em] text-mystic-light/45">{label}</p>
-      <p className="mt-3 font-display text-5xl text-white">{value.toLocaleString()}</p>
+      <p className="mt-3 font-display text-5xl text-white">{value === null ? 'Pending' : value.toLocaleString()}</p>
     </div>
   )
 }
 
-function Breakdown({ title, items }: { title: string; items: CountItem[] }) {
+function Breakdown({
+  title,
+  items,
+  emptyText = 'No visits recorded yet.',
+}: {
+  title: string
+  items: CountItem[]
+  emptyText?: string
+}) {
   const max = Math.max(...items.map((item) => item.count), 1)
 
   return (
@@ -136,7 +153,7 @@ function Breakdown({ title, items }: { title: string; items: CountItem[] }) {
             </div>
           ))
         ) : (
-          <p className="text-mystic-light/55">No visits recorded yet.</p>
+          <p className="text-mystic-light/55">{emptyText}</p>
         )}
       </div>
     </section>
