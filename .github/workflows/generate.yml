@@ -8,19 +8,20 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
-        run: pip install requests supabase python-dotenv
+        run: pip install requests supabase pillow python-dotenv
 
-      - name: Generate daily horoscopes
-        run: python scripts/generate_horoscope.py
+      - name: Generate daily fortunes
+        run: python scripts/generate.py
         env:
           PYTHONUNBUFFERED: "1"
           OPENROUTER_SLEEP_SECONDS: "0.5"
@@ -31,3 +32,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Post daily tarot to Pinterest
+        run: python scripts/pinterest_post.py
+        env:
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
