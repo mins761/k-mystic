@@ -17,6 +17,11 @@ type SpreadOption = {
   positions: string[]
 }
 
+type ReadingSection = {
+  title: string
+  body: string
+}
+
 const spreadOptions: SpreadOption[] = [
   {
     key: 'single',
@@ -269,18 +274,28 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
               <section className="mt-14">
                 <div className="border-y border-mystic-gold/25 py-8">
                   <p className="text-sm uppercase tracking-[0.3em] text-mystic-gold">Combined Message</p>
-                  <p className="mt-4 max-w-4xl text-lg leading-8 text-mystic-light/78">{combinedMessage}</p>
+                  <p className="mt-4 max-w-3xl text-lg leading-8 text-mystic-light/82">{combinedMessage}</p>
                 </div>
-                <div className="mt-10 grid gap-6 lg:grid-cols-2">
+                <div className="mt-10 grid gap-8 lg:grid-cols-2">
                   {drawnCards.map((cardNumber, index) => {
                     const card = fullTarotCards[cardNumber] ?? fullTarotCards[0]
                     const reading = readings[cardNumber] ?? fallbackReading(cardNumber, lang)
                     const meta = getTarotCardMeta(cardNumber)
                     return (
-                      <article key={cardNumber} className="border-t border-white/15 pt-5">
+                      <article key={cardNumber} className="border-t border-white/15 pt-6">
                         <p className="text-xs uppercase tracking-[0.22em] text-mystic-gold">{spread.positions[index]}</p>
+                        <div className="relative mt-5 aspect-[10/17] w-[104px] overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-gold">
+                          <Image
+                            src={tarotCardImage(cardNumber, card.name)}
+                            alt={card.name}
+                            fill
+                            sizes="104px"
+                            className="object-cover"
+                            draggable={false}
+                          />
+                        </div>
                         <h3 className="mt-2 font-display text-3xl text-white">{card.name}</h3>
-                        <p className="mt-4 leading-8 text-mystic-light/74">{reading.body}</p>
+                        <ReadingSections body={reading.body} />
                         <p className="mt-4 font-semibold leading-7 text-mystic-gold">
                           So your next step: {meta.action}.
                         </p>
@@ -307,6 +322,56 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
       </section>
     </main>
   )
+}
+
+function ReadingSections({ body }: { body: string }) {
+  const sections = splitReadingSections(body)
+
+  return (
+    <div className="mt-5 space-y-5">
+      {sections.map((section, index) => (
+        <section key={`${section.title}-${index}`} className="border-t border-mystic-gold/20 pt-4">
+          {section.title ? (
+            <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-mystic-gold">{section.title}</h4>
+          ) : null}
+          <p className={`${section.title ? 'mt-2' : ''} max-w-[62ch] text-[1.02rem] leading-8 text-mystic-light/82`}>
+            {section.body}
+          </p>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+function splitReadingSections(body: string): ReadingSection[] {
+  const labels = [
+    'Overall Energy',
+    'Love & Relationships',
+    'Career & Finance',
+    'Career & Ambition',
+    'Money & Abundance',
+    'Health & Vitality',
+    'Spiritual Growth',
+    'Spiritual Insight',
+  ]
+  const pattern = new RegExp(`(?:^|\\s)(?:\\d+\\.\\s*)?(?:[\\u{1F300}-\\u{1FAFF}]\\s*)?(${labels.join('|')}):`, 'gu')
+  const matches = Array.from(body.matchAll(pattern))
+
+  if (!matches.length) return [{ title: '', body }]
+
+  const intro = body.slice(0, matches[0].index).trim()
+  const sections: ReadingSection[] = intro ? [{ title: '', body: intro }] : []
+
+  matches.forEach((match, index) => {
+    const title = match[1]
+    const contentStart = (match.index ?? 0) + match[0].length
+    const contentEnd = index + 1 < matches.length ? matches[index + 1].index ?? body.length : body.length
+    const sectionBody = body.slice(contentStart, contentEnd).trim()
+
+    if (sectionBody) sections.push({ title, body: sectionBody })
+  })
+
+  return sections.length ? sections : [{ title: '', body }]
 }
 
 async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
