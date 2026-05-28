@@ -1,6 +1,8 @@
 import io
 import os
-from datetime import date
+import math
+import re
+from datetime import date, datetime, timezone
 
 import requests
 from PIL import Image, ImageDraw
@@ -28,7 +30,29 @@ def get_todays_tarot():
     return result.data
 
 
-def get_card_image(card_number):
+def slug_card(name):
+    slug = name.replace("&", "and")
+    slug = re.sub(r'[^a-zA-Z0-9]+', '-', slug)
+    slug = slug.strip('-').lower()
+    return slug
+
+
+def get_deck_path():
+    epoch = datetime.fromisoformat('2026-01-05T00:00:00+00:00')
+    now = datetime.now(timezone.utc)
+    elapsed_weeks = math.floor((now - epoch).total_seconds() / (7 * 24 * 3600))
+    deck_index = 'deck0' if elapsed_weeks % 2 == 0 else 'deck1'
+    return f"public/images/tarot/{deck_index}"
+
+
+def get_card_image_path(card_number, card_name):
+    deck_path = get_deck_path()
+    slug = slug_card(card_name)
+    filename = f"{card_number:02d}-{slug}.png"
+    return os.path.join(deck_path, "cards", filename)
+
+
+def get_wikimedia_url(card_number):
     urls = {
         0: "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg",
         1: "https://upload.wikimedia.org/wikipedia/commons/1/10/RWS_Tarot_01_Magician.jpg",
@@ -56,9 +80,12 @@ def get_card_image(card_number):
     return urls.get(card_number)
 
 
-def create_pin_image(tarot, card_image_url):
-    response = requests.get(card_image_url)
-    card_img = Image.open(io.BytesIO(response.content))
+def create_pin_image(tarot, image_source):
+    if isinstance(image_source, str) and image_source.startswith("http"):
+        response = requests.get(image_source)
+        card_img = Image.open(io.BytesIO(response.content))
+    else:
+        card_img = Image.open(image_source)
 
     canvas = Image.new("RGB", (1000, 1500), color="#0A0A1A")
 
@@ -138,12 +165,18 @@ def main():
         print("No tarot data found for today")
         return
 
-    card_image_url = get_card_image(tarot["card_number"])
-    if not card_image_url:
-        print("No card image found")
-        return
+    card_image_path = get_card_image_path(tarot["card_number"], tarot["card_name"])
+    if os.path.exists(card_image_path):
+        image_source = card_image_path
+        print(f"Using local deck image: {image_source}")
+    else:
+        image_source = get_wikimedia_url(tarot["card_number"])
+        print(f"Local image not found, using Wikimedia fallback: {image_source}")
+        if not image_source:
+            print("No card image found")
+            return
 
-    image_bytes = create_pin_image(tarot, card_image_url)
+    image_bytes = create_pin_image(tarot, image_source)
     board_id = get_board_id()
     result = post_to_pinterest(tarot, image_bytes, board_id)
 
