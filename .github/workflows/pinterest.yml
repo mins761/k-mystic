@@ -1,0 +1,31 @@
+name: Pinterest Auto Poster Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/pinterest_post.py'
+      - '.github/workflows/pinterest.yml'
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Post daily tarot to Pinterest
+        run: python scripts/pinterest_post.py
+        env:
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
