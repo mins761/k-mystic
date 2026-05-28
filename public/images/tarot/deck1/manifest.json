@@ -1,0 +1,422 @@
+{
+  "cards": [
+    {
+      "name": "00-the-fool",
+      "front": "/images/tarot/deck1/cards/00-the-fool.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "01-the-magician",
+      "front": "/images/tarot/deck1/cards/01-the-magician.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "02-the-high-priestess",
+      "front": "/images/tarot/deck1/cards/02-the-high-priestess.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "03-the-empress",
+      "front": "/images/tarot/deck1/cards/03-the-empress.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "04-the-emperor",
+      "front": "/images/tarot/deck1/cards/04-the-emperor.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "05-the-hierophant",
+      "front": "/images/tarot/deck1/cards/05-the-hierophant.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "06-the-lovers",
+      "front": "/images/tarot/deck1/cards/06-the-lovers.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "07-the-chariot",
+      "front": "/images/tarot/deck1/cards/07-the-chariot.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "08-strength",
+      "front": "/images/tarot/deck1/cards/08-strength.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "09-the-hermit",
+      "front": "/images/tarot/deck1/cards/09-the-hermit.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "10-wheel-of-fortune",
+      "front": "/images/tarot/deck1/cards/10-wheel-of-fortune.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "11-justice",
+      "front": "/images/tarot/deck1/cards/11-justice.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "12-the-hanged-man",
+      "front": "/images/tarot/deck1/cards/12-the-hanged-man.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "13-death",
+      "front": "/images/tarot/deck1/cards/13-death.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "14-temperance",
+      "front": "/images/tarot/deck1/cards/14-temperance.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "15-the-devil",
+      "front": "/images/tarot/deck1/cards/15-the-devil.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "16-the-tower",
+      "front": "/images/tarot/deck1/cards/16-the-tower.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "17-the-star",
+      "front": "/images/tarot/deck1/cards/17-the-star.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "18-the-moon",
+      "front": "/images/tarot/deck1/cards/18-the-moon.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "19-the-sun",
+      "front": "/images/tarot/deck1/cards/19-the-sun.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "20-judgement",
+      "front": "/images/tarot/deck1/cards/20-judgement.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "21-the-world",
+      "front": "/images/tarot/deck1/cards/21-the-world.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "22-ace-of-wands",
+      "front": "/images/tarot/deck1/cards/22-ace-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "23-two-of-wands",
+      "front": "/images/tarot/deck1/cards/23-two-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "24-three-of-wands",
+      "front": "/images/tarot/deck1/cards/24-three-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "25-four-of-wands",
+      "front": "/images/tarot/deck1/cards/25-four-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "26-five-of-wands",
+      "front": "/images/tarot/deck1/cards/26-five-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "27-six-of-wands",
+      "front": "/images/tarot/deck1/cards/27-six-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "28-seven-of-wands",
+      "front": "/images/tarot/deck1/cards/28-seven-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "29-eight-of-wands",
+      "front": "/images/tarot/deck1/cards/29-eight-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "30-nine-of-wands",
+      "front": "/images/tarot/deck1/cards/30-nine-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "31-ten-of-wands",
+      "front": "/images/tarot/deck1/cards/31-ten-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "36-ace-of-cups",
+      "front": "/images/tarot/deck1/cards/36-ace-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "37-two-of-cups",
+      "front": "/images/tarot/deck1/cards/37-two-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "38-three-of-cups",
+      "front": "/images/tarot/deck1/cards/38-three-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "39-four-of-cups",
+      "front": "/images/tarot/deck1/cards/39-four-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "40-five-of-cups",
+      "front": "/images/tarot/deck1/cards/40-five-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "41-six-of-cups",
+      "front": "/images/tarot/deck1/cards/41-six-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "42-seven-of-cups",
+      "front": "/images/tarot/deck1/cards/42-seven-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "43-eight-of-cups",
+      "front": "/images/tarot/deck1/cards/43-eight-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "50-ace-of-swords",
+      "front": "/images/tarot/deck1/cards/50-ace-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "51-two-of-swords",
+      "front": "/images/tarot/deck1/cards/51-two-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "52-three-of-swords",
+      "front": "/images/tarot/deck1/cards/52-three-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "53-four-of-swords",
+      "front": "/images/tarot/deck1/cards/53-four-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "54-five-of-swords",
+      "front": "/images/tarot/deck1/cards/54-five-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "55-six-of-swords",
+      "front": "/images/tarot/deck1/cards/55-six-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "56-seven-of-swords",
+      "front": "/images/tarot/deck1/cards/56-seven-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "57-eight-of-swords",
+      "front": "/images/tarot/deck1/cards/57-eight-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "58-nine-of-swords",
+      "front": "/images/tarot/deck1/cards/58-nine-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "59-ten-of-swords",
+      "front": "/images/tarot/deck1/cards/59-ten-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "60-page-of-swords",
+      "front": "/images/tarot/deck1/cards/60-page-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "61-knight-of-swords",
+      "front": "/images/tarot/deck1/cards/61-knight-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "62-queen-of-swords",
+      "front": "/images/tarot/deck1/cards/62-queen-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "63-king-of-swords",
+      "front": "/images/tarot/deck1/cards/63-king-of-swords.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "64-ace-of-pentacles",
+      "front": "/images/tarot/deck1/cards/64-ace-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "65-two-of-pentacles",
+      "front": "/images/tarot/deck1/cards/65-two-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "66-three-of-pentacles",
+      "front": "/images/tarot/deck1/cards/66-three-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "67-four-of-pentacles",
+      "front": "/images/tarot/deck1/cards/67-four-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "68-five-of-pentacles",
+      "front": "/images/tarot/deck1/cards/68-five-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "69-six-of-pentacles",
+      "front": "/images/tarot/deck1/cards/69-six-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "70-seven-of-pentacles",
+      "front": "/images/tarot/deck1/cards/70-seven-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "71-eight-of-pentacles",
+      "front": "/images/tarot/deck1/cards/71-eight-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "72-nine-of-pentacles",
+      "front": "/images/tarot/deck1/cards/72-nine-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "73-ten-of-pentacles",
+      "front": "/images/tarot/deck1/cards/73-ten-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "74-page-of-pentacles",
+      "front": "/images/tarot/deck1/cards/74-page-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "75-knight-of-pentacles",
+      "front": "/images/tarot/deck1/cards/75-knight-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "76-queen-of-pentacles",
+      "front": "/images/tarot/deck1/cards/76-queen-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "77-king-of-pentacles",
+      "front": "/images/tarot/deck1/cards/77-king-of-pentacles.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "32-page-of-wands",
+      "front": "/images/tarot/deck1/cards/32-page-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "33-knight-of-wands",
+      "front": "/images/tarot/deck1/cards/33-knight-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "34-queen-of-wands",
+      "front": "/images/tarot/deck1/cards/34-queen-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "35-king-of-wands",
+      "front": "/images/tarot/deck1/cards/35-king-of-wands.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "44-nine-of-cups",
+      "front": "/images/tarot/deck1/cards/44-nine-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "45-ten-of-cups",
+      "front": "/images/tarot/deck1/cards/45-ten-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "46-page-of-cups",
+      "front": "/images/tarot/deck1/cards/46-page-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "47-knight-of-cups",
+      "front": "/images/tarot/deck1/cards/47-knight-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "48-queen-of-cups",
+      "front": "/images/tarot/deck1/cards/48-queen-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    },
+    {
+      "name": "49-king-of-cups",
+      "front": "/images/tarot/deck1/cards/49-king-of-cups.png",
+      "back": "/images/tarot/deck1/backs/classic-back.png"
+    }
+  ],
+  "special": [
+    {
+      "name": "the-golden-sun",
+      "front": "/images/tarot/deck1/special/the-golden-sun.png",
+      "back": "/images/tarot/deck1/backs/gold-back.png"
+    },
+    {
+      "name": "the-treasure",
+      "front": "/images/tarot/deck1/special/the-treasure.png",
+      "back": "/images/tarot/deck1/backs/gold-back.png"
+    },
+    {
+      "name": "the-fortune",
+      "front": "/images/tarot/deck1/special/the-fortune.png",
+      "back": "/images/tarot/deck1/backs/gold-back.png"
+    },
+    {
+      "name": "the-divine-light",
+      "front": "/images/tarot/deck1/special/the-divine-light.png",
+      "back": "/images/tarot/deck1/backs/gold-back.png"
+    }
+  ],
+  "backs": {
+    "classic": "/images/tarot/deck1/backs/classic-back.png",
+    "gold": "/images/tarot/deck1/backs/gold-back.png",
+    "moon": "/images/tarot/deck1/backs/moon-back.png",
+    "special": "/images/tarot/deck1/backs/gold-back.png"
+  }
+}

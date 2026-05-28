@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import AdBanner from '@/components/AdBanner'
 import HoroscopeCard from '@/components/HoroscopeCard'
+import ReadingSections from '@/components/ReadingSections'
 import { getHoroscope, titleCase } from '@/lib/fortune'
 import { zodiacBg } from '@/lib/images'
 import { zodiacSigns, zodiacSymbols } from '@/lib/i18n'
@@ -42,7 +43,7 @@ export default async function SignPage({ params }: { params: { lang: LanguageCod
       <section className="mx-auto max-w-7xl px-5 py-14">
         <article className="max-w-3xl">
           <h2 className="font-display text-4xl text-white">{fortune.title}</h2>
-          <p className="mt-6 text-lg leading-9 text-mystic-light/76">{fortune.body}</p>
+          <ReadingSections body={fortune.body} borderColor="border-mystic-purple/20" />
         </article>
         <dl className="mt-10 grid gap-5 sm:grid-cols-3">
           <Fact label="Lucky Number" value={String(fortune.lucky_number ?? 3)} />

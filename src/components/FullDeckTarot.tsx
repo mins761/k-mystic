@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 import { getTarotCardMeta, getTarotReadingBody } from '@/lib/tarotMeanings'
 import type { Fortune, LanguageCode } from '@/types'
+import ReadingSections from '@/components/ReadingSections'
 
 type SpreadKey = 'single' | 'three' | 'five' | 'ten'
 
@@ -324,55 +325,7 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
   )
 }
 
-function ReadingSections({ body }: { body: string }) {
-  const sections = splitReadingSections(body)
-
-  return (
-    <div className="mt-5 space-y-5">
-      {sections.map((section, index) => (
-        <section key={`${section.title}-${index}`} className="border-t border-mystic-gold/20 pt-4">
-          {section.title ? (
-            <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-mystic-gold">{section.title}</h4>
-          ) : null}
-          <p className={`${section.title ? 'mt-2' : ''} max-w-[62ch] text-[1.02rem] leading-8 text-mystic-light/82`}>
-            {section.body}
-          </p>
-        </section>
-      ))}
-    </div>
-  )
-}
-
-function splitReadingSections(body: string): ReadingSection[] {
-  const labels = [
-    'Overall Energy',
-    'Love & Relationships',
-    'Career & Finance',
-    'Career & Ambition',
-    'Money & Abundance',
-    'Health & Vitality',
-    'Spiritual Growth',
-    'Spiritual Insight',
-  ]
-  const pattern = new RegExp(`(?:^|\\s)(?:\\d+\\.\\s*)?(?:[\\u{1F300}-\\u{1FAFF}]\\s*)?(${labels.join('|')}):`, 'gu')
-  const matches = Array.from(body.matchAll(pattern))
-
-  if (!matches.length) return [{ title: '', body }]
-
-  const intro = body.slice(0, matches[0].index).trim()
-  const sections: ReadingSection[] = intro ? [{ title: '', body: intro }] : []
-
-  matches.forEach((match, index) => {
-    const title = match[1]
-    const contentStart = (match.index ?? 0) + match[0].length
-    const contentEnd = index + 1 < matches.length ? matches[index + 1].index ?? body.length : body.length
-    const sectionBody = body.slice(contentStart, contentEnd).trim()
-
-    if (sectionBody) sections.push({ title, body: sectionBody })
-  })
-
-  return sections.length ? sections : [{ title: '', body }]
-}
+// Local splitReadingSections was removed in favor of shared import
 
 async function loadReadings(cardNumbers: number[], lang: LanguageCode) {
   const fallback = Object.fromEntries(cardNumbers.map((number) => [number, fallbackReading(number, lang)]))

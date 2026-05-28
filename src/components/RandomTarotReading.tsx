@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { fullTarotCards, tarotBacks, tarotCardImage } from '@/lib/tarotAssets'
 import { getTarotCardMeta, getTarotReadingBody } from '@/lib/tarotMeanings'
 import type { Fortune, LanguageCode } from '@/types'
+import ReadingSections from '@/components/ReadingSections'
 
 type RandomTarotReadingProps = {
   lang: LanguageCode
@@ -161,12 +162,14 @@ export default function RandomTarotReading({
             <h2 className="mt-3 font-display text-5xl text-white">
               {reading ? readingTitle : copy?.emptyTitle ?? 'Choose one card for today'}
             </h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">
-              {reading
-                ? reading.body
-                : copy?.emptyBody ??
+            {reading ? (
+              <ReadingSections body={reading.body} />
+            ) : (
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-mystic-light/74">
+                {copy?.emptyBody ??
                   'Three cards are waiting face down. Let your attention settle, choose one, and your daily reading will open from that card.'}
-            </p>
+              </p>
+            )}
             {reading && readingMeta ? (
               <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-mystic-gold">
                 So your next step: {readingMeta.action}.

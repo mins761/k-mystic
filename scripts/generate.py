@@ -139,6 +139,7 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 API_SLEEP_SECONDS = float(os.getenv("OPENROUTER_SLEEP_SECONDS", "1"))
 OPENROUTER_TIMEOUT_SECONDS = int(os.getenv("OPENROUTER_TIMEOUT_SECONDS", "45"))
 OPENROUTER_ATTEMPTS_PER_MODEL = int(os.getenv("OPENROUTER_ATTEMPTS_PER_MODEL", "2"))
+OPENROUTER_MODEL_CACHE: list[str] | None = None
 
 
 def env_required(name: str) -> str:
@@ -158,6 +159,11 @@ def openrouter_keys() -> list[str]:
 
 
 def openrouter_models() -> list[str]:
+    global OPENROUTER_MODEL_CACHE
+
+    if OPENROUTER_MODEL_CACHE is not None:
+        return OPENROUTER_MODEL_CACHE
+
     raw_models = os.getenv("OPENROUTER_MODELS", "")
     custom_models = [
         model.strip()
@@ -169,7 +175,8 @@ def openrouter_models() -> list[str]:
     models += [model for model in live_models if model not in models][:4]
     if not models:
         models = [model for model in DEFAULT_MODELS if is_usable_model(model)]
-    return models
+    OPENROUTER_MODEL_CACHE = models
+    return OPENROUTER_MODEL_CACHE
 
 
 def is_usable_model(model: str) -> bool:

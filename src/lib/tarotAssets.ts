@@ -81,38 +81,55 @@ export const fullTarotCards = [
 
 const tarotSlugs = fullTarotCards.map((card) => slugCard(card.name))
 
+export function getDeckPath() {
+  const epoch = new Date('2026-01-05T00:00:00Z').getTime() // A Monday in 2026
+  const now = Date.now()
+  const millisecondsInWeek = 7 * 24 * 60 * 60 * 1000
+  const elapsedWeeks = Math.floor((now - epoch) / millisecondsInWeek)
+  
+  // Alternating between deck0 and deck1
+  const deckIndex = elapsedWeeks % 2 === 0 ? 'deck0' : 'deck1'
+  return `/images/tarot/${deckIndex}`
+}
+
 export const tarotBacks = {
-  classic: '/images/tarot/backs/classic-back.png',
-  gold: '/images/tarot/backs/gold-back.png',
-  moon: '/images/tarot/backs/moon-back.png',
+  get classic() {
+    return `${getDeckPath()}/backs/classic-back.png`
+  },
+  get gold() {
+    return `${getDeckPath()}/backs/gold-back.png`
+  },
+  get moon() {
+    return `${getDeckPath()}/backs/moon-back.png`
+  },
 }
 
 export const specialTarotCards = [
   {
     name: 'The Golden Sun',
-    front: '/images/tarot/special/the-golden-sun.png',
-    back: tarotBacks.gold,
+    get front() { return `${getDeckPath()}/special/the-golden-sun.png` },
+    get back() { return tarotBacks.gold },
   },
   {
     name: 'The Treasure',
-    front: '/images/tarot/special/the-treasure.png',
-    back: tarotBacks.gold,
+    get front() { return `${getDeckPath()}/special/the-treasure.png` },
+    get back() { return tarotBacks.gold },
   },
   {
     name: 'The Fortune',
-    front: '/images/tarot/special/the-fortune.png',
-    back: tarotBacks.gold,
+    get front() { return `${getDeckPath()}/special/the-fortune.png` },
+    get back() { return tarotBacks.gold },
   },
   {
     name: 'The Divine Light',
-    front: '/images/tarot/special/the-divine-light.png',
-    back: tarotBacks.gold,
+    get front() { return `${getDeckPath()}/special/the-divine-light.png` },
+    get back() { return tarotBacks.gold },
   },
 ]
 
 export function tarotCardImage(number: number, name?: string) {
   const slug = tarotSlugs[number] ?? slugCard(name || `card-${number}`)
-  return `/images/tarot/cards/${String(number).padStart(2, '0')}-${slug}.png`
+  return `${getDeckPath()}/cards/${String(number).padStart(2, '0')}-${slug}.png`
 }
 
 function slugCard(name: string) {
@@ -122,3 +139,4 @@ function slugCard(name: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 }
+
