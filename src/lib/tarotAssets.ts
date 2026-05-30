@@ -82,6 +82,15 @@ export const fullTarotCards = [
 const tarotSlugs = fullTarotCards.map((card) => slugCard(card.name))
 
 export function getDeckPath() {
+  // 클라이언트 브라우저 환경에서 ?deck=deck0 또는 ?deck=deck1 쿼리 감지 시 강제 적용 (디버그 모드)
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search)
+    const forcedDeck = params.get('deck')
+    if (forcedDeck === 'deck0' || forcedDeck === 'deck1') {
+      return `/images/tarot/${forcedDeck}`
+    }
+  }
+
   const epoch = new Date('2026-01-05T00:00:00Z').getTime() // A Monday in 2026
   const now = Date.now()
   const millisecondsInWeek = 7 * 24 * 60 * 60 * 1000
