@@ -10,6 +10,9 @@ export default function Footer({ lang }: { lang: LanguageCode }) {
           <Link href={`/${lang}/about`} className="hover:text-mystic-gold">
             About
           </Link>
+          <Link href={`/${lang}/terms`} className="hover:text-mystic-gold">
+            Terms
+          </Link>
           <Link href={`/${lang}/privacy`} className="hover:text-mystic-gold">
             Privacy
           </Link>

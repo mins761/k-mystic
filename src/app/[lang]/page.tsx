@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { unstable_noStore as noStore } from 'next/cache'
 import { headers } from 'next/headers'
 import AdBanner from '@/components/AdBanner'
@@ -26,32 +27,54 @@ export default async function HomePage({ params }: { params: { lang: LanguageCod
 
   return (
     <main>
-      <section className="relative min-h-[calc(100svh-92px)] overflow-hidden px-5 py-20">
+      <section className="relative min-h-[calc(100svh-92px)] overflow-hidden px-5 py-12 md:py-20 flex items-center">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-60"
+          className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1920)' }}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-mystic-dark via-transparent to-mystic-dark/80" />
         <StarryBackground />
-        <div className="relative z-10 mx-auto flex max-w-7xl flex-col justify-end pt-16">
-          <p className="text-sm uppercase tracking-[0.38em] text-mystic-gold">{new Date().toLocaleDateString()}</p>
-          <h1 className="mt-5 max-w-3xl font-display text-6xl font-semibold leading-none text-white md:text-8xl">
-            K-Mystic
-          </h1>
-          <p className="mt-5 max-w-xl text-2xl font-light text-mystic-light md:text-3xl">{t.daily}</p>
-          <p className="mt-4 max-w-xl leading-7 text-mystic-light/72">{t.intro}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href={`/${lang}/tarot`}
-              className="rounded-full bg-mystic-gold px-6 py-3 font-semibold text-mystic-dark transition hover:scale-[1.02] hover:bg-amber-300"
-            >
-              {t.tarot}
-            </Link>
-            <Link
-              href={`/${lang}/horoscope`}
-              className="rounded-full border border-white/20 px-6 py-3 font-semibold text-white transition hover:border-mystic-gold hover:text-mystic-gold"
-            >
-              {t.exploreSigns}
-            </Link>
+        
+        <div className="relative z-10 mx-auto w-full max-w-7xl grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+          {/* Left Content Column */}
+          <div className="flex flex-col justify-center">
+            <p className="text-sm uppercase tracking-[0.38em] text-mystic-gold">{new Date().toLocaleDateString()}</p>
+            <h1 className="mt-5 font-display text-6xl font-semibold leading-none text-white md:text-8xl">
+              K-Mystic
+            </h1>
+            <p className="mt-5 max-w-xl text-2xl font-light text-mystic-light md:text-3xl">{t.daily}</p>
+            <p className="mt-4 max-w-xl leading-7 text-mystic-light/72">{t.intro}</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href={`/${lang}/tarot`}
+                className="rounded-full bg-mystic-gold px-6 py-3 font-semibold text-mystic-dark transition hover:scale-[1.02] hover:bg-amber-300"
+              >
+                {t.tarot}
+              </Link>
+              <Link
+                href={`/${lang}/horoscope`}
+                className="rounded-full border border-white/20 px-6 py-3 font-semibold text-white transition hover:border-mystic-gold hover:text-mystic-gold"
+              >
+                {t.exploreSigns}
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Visual Column (Traditional Tarot Card Asset) */}
+          <div className="relative flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-[320px] md:max-w-[360px] aspect-[1000/1745] overflow-hidden rounded-2xl border-2 border-mystic-gold/40 shadow-[0_0_60px_rgba(217,119,6,0.22)] group transition-all duration-500 hover:border-mystic-gold/80 hover:shadow-[0_0_80px_rgba(217,119,6,0.35)]">
+              <Image
+                src="/images/korean_tarot_hero.png"
+                alt="K-Mystic Traditional Korean Tarot Card"
+                fill
+                priority
+                sizes="(max-w-7xl) 100vw, 360px"
+                className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+              />
+              {/* Subtle Overlay Mask */}
+              <div className="absolute inset-0 bg-gradient-to-t from-mystic-dark/40 via-transparent to-transparent opacity-60 pointer-events-none" />
+              <div className="absolute -inset-px rounded-2xl border border-white/10 pointer-events-none" />
+            </div>
           </div>
         </div>
       </section>

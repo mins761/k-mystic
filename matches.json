@@ -1,0 +1,522 @@
+{
+  "01.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "17-the-star.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "06-the-lovers.png",
+      "matches": 25
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "14-temperance.png",
+      "matches": 25
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 23
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "04-the-emperor.png",
+      "matches": 20
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 27
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "04-the-emperor.png",
+      "matches": 23
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 27
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "13-death.png",
+      "matches": 24
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "17-the-star.png",
+      "matches": 26
+    }
+  ],
+  "02.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "16-the-tower.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "04-the-emperor.png",
+      "matches": 21
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 34
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "13-death.png",
+      "matches": 29
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "14-temperance.png",
+      "matches": 23
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "17-the-star.png",
+      "matches": 33
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 21
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "17-the-star.png",
+      "matches": 33
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "17-the-star.png",
+      "matches": 29
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "11-justice.png",
+      "matches": 24
+    }
+  ],
+  "03.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "17-the-star.png",
+      "matches": 34
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "09-the-hermit.png",
+      "matches": 25
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "17-the-star.png",
+      "matches": 40
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "17-the-star.png",
+      "matches": 39
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "14-temperance.png",
+      "matches": 30
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "13-death.png",
+      "matches": 22
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "11-justice.png",
+      "matches": 28
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "16-the-tower.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "05-the-hierophant.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "02-the-high-priestess.png",
+      "matches": 21
+    }
+  ],
+  "04.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "04-the-emperor.png",
+      "matches": 13
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "03-the-empress.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "36-ace-of-cups.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "05-the-hierophant.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "13-death.png",
+      "matches": 24
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "09-the-hermit.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "05-the-hierophant.png",
+      "matches": 22
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "08-strength.png",
+      "matches": 14
+    }
+  ],
+  "05.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "32-page-of-wands.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "21-the-world.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "16-the-tower.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "16-the-tower.png",
+      "matches": 20
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "13-death.png",
+      "matches": 13
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "20-judgement.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "05-the-hierophant.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "34-queen-of-wands.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "00-the-fool.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "13-death.png",
+      "matches": 18
+    }
+  ],
+  "06.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "71-eight-of-pentacles.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "30-nine-of-wands.png",
+      "matches": 13
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "34-queen-of-wands.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "05-the-hierophant.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "09-the-hermit.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "27-six-of-wands.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "14-temperance.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "09-the-hermit.png",
+      "matches": 20
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "20-judgement.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "08-strength.png",
+      "matches": 17
+    }
+  ],
+  "07.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "60-page-of-swords.png",
+      "matches": 14
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "02-the-high-priestess.png",
+      "matches": 13
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "17-the-star.png",
+      "matches": 14
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "05-the-hierophant.png",
+      "matches": 13
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "12-the-hanged-man.png",
+      "matches": 14
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "70-seven-of-pentacles.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "16-the-tower.png",
+      "matches": 22
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "06-the-lovers.png",
+      "matches": 17
+    }
+  ],
+  "08.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "05-the-hierophant.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "05-the-hierophant.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "13-death.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "01-the-magician.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "06-the-lovers.png",
+      "matches": 22
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "05-the-hierophant.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "09-the-hermit.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "15-the-devil.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "06-the-lovers.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "14-temperance.png",
+      "matches": 15
+    }
+  ],
+  "09.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "08-strength.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "11-justice.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "34-queen-of-wands.png",
+      "matches": 21
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "07-the-chariot.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "19-the-sun.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "40-five-of-cups.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "04-the-emperor.png",
+      "matches": 19
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "19-the-sun.png",
+      "matches": 20
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "04-the-emperor.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "05-the-hierophant.png",
+      "matches": 15
+    }
+  ],
+  "10.png": [
+    {
+      "cell_idx": 0,
+      "best_match": "13-death.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 1,
+      "best_match": "16-the-tower.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 2,
+      "best_match": "04-the-emperor.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 3,
+      "best_match": "07-the-chariot.png",
+      "matches": 16
+    },
+    {
+      "cell_idx": 4,
+      "best_match": "38-three-of-cups.png",
+      "matches": 15
+    },
+    {
+      "cell_idx": 5,
+      "best_match": "55-six-of-swords.png",
+      "matches": 17
+    },
+    {
+      "cell_idx": 6,
+      "best_match": "37-two-of-cups.png",
+      "matches": 21
+    },
+    {
+      "cell_idx": 7,
+      "best_match": "24-three-of-wands.png",
+      "matches": 18
+    },
+    {
+      "cell_idx": 8,
+      "best_match": "33-knight-of-wands.png",
+      "matches": 20
+    },
+    {
+      "cell_idx": 9,
+      "best_match": "24-three-of-wands.png",
+      "matches": 19
+    }
+  ]
+}
