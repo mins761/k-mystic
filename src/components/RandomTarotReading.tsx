@@ -171,14 +171,22 @@ export default function RandomTarotReading({
               </p>
             )}
             {reading && readingMeta ? (
-              <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-mystic-gold">
-                So your next step: {readingMeta.action}.
-              </p>
+              <div className="mt-6 max-w-2xl rounded-xl border border-mystic-gold/20 bg-mystic-gold/5 p-4 md:p-5">
+                <p className="text-xs uppercase tracking-[0.15em] text-mystic-gold/80 font-semibold">Suggested Action</p>
+                <p className="mt-1.5 text-base font-semibold leading-relaxed text-amber-300 antialiased">
+                  {readingMeta.action}.
+                </p>
+              </div>
             ) : null}
             {reading ? (
-              <Link href={`/${lang}/tarot`} className="mt-7 inline-flex text-mystic-gold hover:text-amber-200">
-                {readFull}
-              </Link>
+              <div className="mt-7">
+                <Link
+                  href={`/${lang}/tarot`}
+                  className="inline-flex rounded-full border border-mystic-gold/40 bg-mystic-gold/5 px-6 py-2.5 text-sm font-semibold text-mystic-gold transition hover:bg-mystic-gold/12 hover:text-amber-200 hover:border-mystic-gold"
+                >
+                  {readFull}
+                </Link>
+              </div>
             ) : null}
           </div>
           <div className="daily-arc mx-auto flex min-h-[340px] w-full max-w-[620px] flex-wrap items-end justify-center gap-4 sm:flex-nowrap sm:gap-0">

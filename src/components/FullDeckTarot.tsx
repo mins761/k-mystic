@@ -283,27 +283,48 @@ export default function FullDeckTarot({ lang }: { lang: LanguageCode }) {
                     const reading = readings[cardNumber] ?? fallbackReading(cardNumber, lang)
                     const meta = getTarotCardMeta(cardNumber)
                     return (
-                      <article key={cardNumber} className="border-t border-white/15 pt-6">
-                        <p className="text-xs uppercase tracking-[0.22em] text-mystic-gold">{spread.positions[index]}</p>
-                        <div className="relative mt-5 aspect-[10/17] w-[104px] overflow-hidden rounded-xl border border-mystic-gold/70 bg-mystic-dark shadow-gold">
-                          <Image
-                            src={tarotCardImage(cardNumber, card.name)}
-                            alt={card.name}
-                            fill
-                            sizes="104px"
-                            className="object-cover"
-                            draggable={false}
-                          />
+                      <article
+                        key={cardNumber}
+                        className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0F0F23]/80 p-6 md:p-8 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.4)] transition duration-300 hover:border-mystic-gold/45 hover:shadow-[0_4px_32px_rgba(245,158,11,0.08)]"
+                      >
+                        {/* Card Header: Image & Title info */}
+                        <div className="flex gap-5 items-start">
+                          <div className="relative aspect-[10/17] w-[86px] md:w-[96px] flex-shrink-0 overflow-hidden rounded-xl border border-mystic-gold/60 bg-mystic-dark shadow-md">
+                            <Image
+                              src={tarotCardImage(cardNumber, card.name)}
+                              alt={card.name}
+                              fill
+                              sizes="96px"
+                              className="object-cover"
+                              draggable={false}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs uppercase tracking-[0.22em] text-mystic-gold/90 font-medium">
+                              {spread.positions[index]}
+                            </p>
+                            <h3 className="mt-1 font-display text-2xl md:text-3xl font-semibold text-white leading-tight">
+                              {card.name}
+                            </h3>
+                            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                              <Badge label="Number" value={String(meta.tarotNumber)} />
+                              <Badge label="Color" value={meta.luckyColor} />
+                              <Badge label="Match" value={meta.compatibility} />
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="mt-2 font-display text-3xl text-white">{card.name}</h3>
+
+                        {/* Detailed Reading Body */}
                         <ReadingSections body={reading.body} />
-                        <p className="mt-4 font-semibold leading-7 text-mystic-gold">
-                          So your next step: {meta.action}.
-                        </p>
-                        <div className="mt-5 flex flex-wrap gap-2 text-sm">
-                          <Badge label="Number" value={String(meta.tarotNumber)} />
-                          <Badge label="Color" value={meta.luckyColor} />
-                          <Badge label="Match" value={meta.compatibility} />
+
+                        {/* Suggested Action Box */}
+                        <div className="mt-6 rounded-xl border border-mystic-gold/20 bg-mystic-gold/5 p-4 md:p-5">
+                          <p className="text-xs uppercase tracking-[0.15em] text-mystic-gold/80 font-semibold">
+                            Suggested Action
+                          </p>
+                          <p className="mt-1.5 text-base font-semibold leading-relaxed text-amber-300 antialiased">
+                            {meta.action}.
+                          </p>
                         </div>
                       </article>
                     )
