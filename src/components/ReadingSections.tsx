@@ -22,9 +22,16 @@ export default function ReadingSections({
               {section.title}
             </h4>
           ) : null}
-          <p className={`${section.title ? 'mt-3' : ''} text-base md:text-[1.05rem] leading-relaxed md:leading-[1.78] tracking-wide ${textColor} antialiased`}>
-            {section.body}
-          </p>
+          <div className={`${section.title ? 'mt-3.5' : ''} space-y-4`}>
+            {section.body.split('\n').filter(p => p.trim()).map((paragraph, pIdx) => (
+              <p
+                key={pIdx}
+                className="text-base md:text-[1.05rem] leading-relaxed md:leading-[1.85] tracking-wide text-slate-100/90 antialiased font-light"
+              >
+                {paragraph.trim()}
+              </p>
+            ))}
+          </div>
         </section>
       ))}
     </div>

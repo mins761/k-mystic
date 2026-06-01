@@ -96,8 +96,9 @@ export function getDeckPath() {
   const millisecondsInWeek = 7 * 24 * 60 * 60 * 1000
   const elapsedWeeks = Math.floor((now - epoch) / millisecondsInWeek)
   
-  // Alternating between deck0 and deck1
-  const deckIndex = elapsedWeeks % 2 === 0 ? 'deck0' : 'deck1'
+  // NOTE: deck1 리소스의 이미지 매핑 오류 및 뒷면 해골 버그가 있으므로
+  // 안정적인 카드 덱을 위해 항상 'deck0'을 사용하도록 임시 고정합니다.
+  const deckIndex = 'deck0'
   return `/images/tarot/${deckIndex}`
 }
 
