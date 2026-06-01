@@ -7,32 +7,45 @@ export default function Header({ lang }: { lang: LanguageCode }) {
   const t = dictionary[lang]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-mystic-dark/78 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
-        <Link href={`/${lang}`} className="group">
-          <span className="block font-display text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-mystic-gold via-mystic-pink to-mystic-glow">
+    <header className="sticky top-0 z-50 border-b border-[#C89D3C]/20 bg-mystic-dark/85 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-3">
+        <Link href={`/${lang}`} className="group flex flex-col items-start leading-none">
+          <span className="font-display text-xl font-bold tracking-[0.15em] text-gold-gradient uppercase drop-shadow-[0_0_8px_rgba(200,157,60,0.25)]">
             K-Mystic
           </span>
-          <span className="text-xs text-mystic-light/62">{t.tagline}</span>
+          <span className="mt-1 text-[0.62rem] font-semibold tracking-[0.25em] text-[#C89D3C]/80 uppercase">
+            Royal Korean Tarot
+          </span>
         </Link>
-        <nav className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 text-sm text-mystic-light/78">
+        
+        <nav className="hidden lg:flex items-center gap-2 text-sm">
           {[
-            [t.tarot, 'tarot'],
-            [t.horoscope, 'horoscope'],
-            [t.saju, 'saju'],
-            [t.love, 'love'],
-            [t.compatibility, 'compatibility'],
+            [t.tarot || 'Tarot', 'tarot'],
+            [t.saju || 'Saju', 'saju'],
+            [t.compatibility || 'Compatibility', 'compatibility'],
+            ['Daily Fortune', ''],
+            ['Zodiac', 'horoscope'],
+            ['About', 'about'],
           ].map(([label, href]) => (
             <Link
               key={href}
               href={`/${lang}/${href}`}
-              className="rounded-full px-3 py-2 transition hover:bg-white/10 hover:text-mystic-gold"
+              className="px-3.5 py-1.5 font-display text-[0.7rem] font-bold tracking-[0.2em] text-slate-300 uppercase transition hover:text-[#e2c974]"
             >
               {label}
             </Link>
           ))}
         </nav>
-        <LanguageSwitcher lang={lang} />
+        
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher lang={lang} />
+          <Link
+            href={`/${lang}/tarot`}
+            className="rounded-sm bg-gradient-to-r from-amber-400 via-mystic-gold to-amber-500 px-5 py-2 text-[0.68rem] font-bold tracking-[0.15em] text-mystic-dark transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.45)] hover:scale-[1.02]"
+          >
+            START READING
+          </Link>
+        </div>
       </div>
     </header>
   )
